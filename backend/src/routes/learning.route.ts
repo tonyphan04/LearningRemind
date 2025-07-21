@@ -146,8 +146,6 @@ const router = Router();
  *           type: integer
  *         itemId:
  *           type: integer
- *         item:
- *           $ref: '#/components/schemas/LearningItem'
  */
 
 router.post("/", createNote);

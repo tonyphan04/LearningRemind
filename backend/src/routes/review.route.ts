@@ -3,27 +3,61 @@ import { getTodayTasks, sendTodayReviewEmail } from "../controller/review.contro
 
 /**
  * @swagger
+ * components:
+ *   schemas:
+ *     LearningItemResponse:
+ *       type: object
+ *       properties:
+ *         id:
+ *           type: integer
+ *         topic:
+ *           type: string
+ *         goal:
+ *           type: array
+ *           items:
+ *             type: string
+ *         resources:
+ *           type: array
+ *           items:
+ *             type: string
+ *         startDay:
+ *           type: string
+ *           format: date-time
+ *         createdAt:
+ *           type: string
+ *           format: date-time
+ *         reviews:
+ *           type: array
+ *           items:
+ *             type: object
+ *             properties:
+ *               id:
+ *                 type: integer
+ *               intervalDay:
+ *                 type: integer
+ *               itemId:
+ *                 type: integer
  * /api/reviews/today:
  *   get:
- *     summary: Get today's review tasks
+ *     summary: Get today's review items
  *     responses:
  *       200:
- *         description: List of review tasks due today
+ *         description: List of today's review items
  *         content:
  *           application/json:
  *             schema:
  *               type: array
  *               items:
- *                 $ref: '#/components/schemas/ReviewTask'
+ *                 $ref: '#/components/schemas/LearningItemResponse'
  */
 /**
  * @swagger
  * /api/reviews/today/email:
  *   get:
- *     summary: Send today's review tasks via email
+ *     summary: Send today's review items via email
  *     responses:
  *       200:
- *         description: Email sent
+ *         description: Email sent with today's review items
  *         content:
  *           application/json:
  *             schema:

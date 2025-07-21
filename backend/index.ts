@@ -1,5 +1,5 @@
 // Automatically start the scheduled review email cron job
-import '../sendReviewEmailCron';
+import "./sendReviewEmailCron";
 import express from "express";
 import cors from "cors";
 import helmet from "helmet";
