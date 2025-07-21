@@ -1,5 +1,7 @@
-// Automatically start the scheduled review email cron job
-import "./sendReviewEmailCron";
+// Automatically start the scheduled review email cron job (only in production)
+if (process.env.NODE_ENV === 'production') {
+  import("./sendReviewEmailCron");
+}
 import express from "express";
 import cors from "cors";
 import helmet from "helmet";
@@ -63,4 +65,4 @@ app.use((err: any, _req: express.Request, res: express.Response, _next: express.
 });
 
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => console.log(`Server running on http://localhost:${PORT}`));
+app.listen(PORT, () => console.log(`Server running on port ${PORT}`));

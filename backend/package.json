@@ -3,6 +3,9 @@
   "license": "MIT",
   "scripts": {
     "dev": "nodemon --watch src --ext ts --exec npx ts-node index.ts",
+    "build": "tsc",
+    "start": "node dist/index.js",
+    "vercel-build": "prisma generate && prisma db push",
     "queries": "ts-node ./src/queries.ts",
     "caching": "ts-node ./src/caching.ts"
   },
