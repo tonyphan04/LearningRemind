@@ -2,6 +2,7 @@
   "name": "hello-prisma",
   "license": "MIT",
   "scripts": {
+    "dev": "nodemon --watch src --ext ts --exec npx ts-node index.ts",
     "queries": "ts-node ./src/queries.ts",
     "caching": "ts-node ./src/caching.ts"
   },
@@ -9,9 +10,24 @@
     "@prisma/client": "6.9.0",
     "@prisma/extension-accelerate": "2.0.1",
     "@types/node": "22.15.32",
-    "dotenv": "16.6.1"
+    "body-parser": "^2.2.0",
+    "cors": "^2.8.5",
+    "dotenv": "^16.6.1",
+    "express": "^5.1.0",
+    "express-rate-limit": "^8.0.1",
+    "helmet": "^8.1.0",
+    "morgan": "^1.10.1",
+    "swagger-jsdoc": "^6.2.8",
+    "swagger-ui-express": "^5.0.1"
   },
   "devDependencies": {
+    "@types/body-parser": "^1.19.6",
+    "@types/cors": "^2.8.19",
+    "@types/express": "^5.0.3",
+    "@types/helmet": "^0.0.48",
+    "@types/morgan": "^1.9.10",
+    "@types/swagger-ui-express": "^4.1.8",
+    "nodemon": "^3.1.10",
     "prisma": "6.9.0",
     "ts-node": "10.9.2",
     "typescript": "5.8.2"
