@@ -34,29 +34,40 @@ interface LearningItem {
 }
 
 export async function getTodayReviewTasks(): Promise<ReviewTaskWithItem[]> {
-  // Query all LearningItems whose startDay is today (UTC), including their review tasks
-  const items: LearningItem[] = await prisma.learningItem.findMany({
+  // Get the start and end of today in UTC
+  const now = new Date();
+  const startOfDay = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate(), 0, 0, 0, 0));
+  const endOfDay = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate(), 23, 59, 59, 999));
+
+  // Query all ReviewTasks whose review date is today
+  const reviewTasks = await prisma.reviewTask.findMany({
     where: {
-      startDay: new Date(),
+      item: {
+        startDay: now
+      },
     },
-    include: { reviews: true },
+    include: { item: true },
   });
 
-  // Flatten all review tasks from today's items
-  const tasks: ReviewTaskWithItem[] = items.flatMap(item =>
-    item.reviews.map(review => ({
-      ...review,
-      item: {
-        id: item.id,
-        topic: item.topic,
-        goal: item.goal,
-        resources: item.resources,
-        startDay: item.startDay,
-        createdAt: item.createdAt,
-        // add other fields if needed
-      },
-    }))
-  );
+  // Only include review tasks due today
+  const tasks: ReviewTaskWithItem[] = reviewTasks.filter(task => {
+    if (!task.item?.startDay || typeof task.intervalDay !== 'number') return false;
+    const reviewDate = new Date(new Date(task.item.startDay).getTime() + task.intervalDay * 86400000);
+    return reviewDate >= startOfDay && reviewDate <= endOfDay;
+  }).map(task => ({
+    id: task.id,
+    intervalDay: task.intervalDay,
+    itemId: task.itemId,
+    item: {
+      id: task.item.id,
+      topic: task.item.topic,
+      goal: task.item.goal,
+      resources: task.item.resources,
+      startDay: task.item.startDay,
+      createdAt: task.item.createdAt,
+      // add other fields if needed
+    },
+  }));
 
   return tasks;
 }

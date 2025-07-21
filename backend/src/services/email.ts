@@ -14,7 +14,14 @@ export type ReviewTaskWithItem = {
   };
 };
 
-export async function sendReviewEmail(tasks: ReviewTaskWithItem[]) {
+export async function sendReviewEmail(items: {
+  id: number;
+  topic: string;
+  goal: string[];
+  resources: string[];
+  startDay: Date;
+  createdAt: Date;
+}[]) {
   // Configure your email transport
   const transporter = nodemailer.createTransport({
     service: 'gmail',
@@ -24,20 +31,9 @@ export async function sendReviewEmail(tasks: ReviewTaskWithItem[]) {
     }
   })
 
-  // Only include tasks due today
-  const now = new Date();
-  const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0, 0);
-  const endOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59, 999);
-
-  const todaysTasks = tasks.filter(task => {
-    if (!task.item.startDay || typeof task.intervalDay !== 'number') return false;
-    const reviewDate = new Date(new Date(task.item.startDay).getTime() + task.intervalDay * 86400000);
-    return reviewDate >= startOfDay && reviewDate <= endOfDay;
-  });
-
-  const taskList = todaysTasks.map(task => {
-    const dateStr = task.item.startDay ? new Date(task.item.startDay).toLocaleDateString() : '';
-    return `Date: ${dateStr}\nTopic: ${task.item.topic}\nGoals: ${task.item.goal.join(', ')}\nResources: ${task.item.resources.join(', ')}\n`;
+  const taskList = items.map(item => {
+    const dateStr = item.startDay ? new Date(item.startDay).toLocaleDateString() : '';
+    return `Date: ${dateStr}\nTopic: ${item.topic}\nGoals: ${item.goal.join(', ')}\nResources: ${item.resources.join(', ')}\n`;
   }).join('\n---\n');
 
   const mailOptions = {
@@ -45,12 +41,13 @@ export async function sendReviewEmail(tasks: ReviewTaskWithItem[]) {
     to: process.env.EMAIL_TO,
     subject: 'Your Review Tasks for Today',
     text: `Here are your review tasks for today:\n${taskList}`,
-    html: `<h2>Your Review Tasks for Today</h2><ul>${todaysTasks.map(task => {
-      const dateStr = task.item.startDay ? new Date(task.item.startDay).toLocaleDateString() : '';
-      return `<li><strong>Date:</strong> ${dateStr}<br/><strong>Topic:</strong> ${task.item.topic}<br/><strong>Goals:</strong> ${task.item.goal.join(', ')}<br/><strong>Resources:</strong> ${task.item.resources.join(', ')}</li>`;
+    html: `<h2>Your Review Tasks for Today</h2><ul>${items.map(item => {
+      const dateStr = item.startDay ? new Date(item.startDay).toLocaleDateString() : '';
+      return `<li><strong>Date:</strong> ${dateStr}<br/><strong>Topic:</strong> ${item.topic}<br/><strong>Goals:</strong> ${item.goal.join(', ')}<br/><strong>Resources:</strong> ${item.resources.join(', ')}</li>`;
     }).join('')}</ul>`
   };
 
   await transporter.sendMail(mailOptions)
 }
+
 
