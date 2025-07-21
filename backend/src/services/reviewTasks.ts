@@ -34,18 +34,10 @@ interface LearningItem {
 }
 
 export async function getTodayReviewTasks(): Promise<ReviewTaskWithItem[]> {
-  // Get the start and end of today in UTC
-  const now = new Date();
-  const startOfDay = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate(), 0, 0, 0, 0));
-  const endOfDay = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate(), 23, 59, 59, 999));
-
   // Query all LearningItems whose startDay is today (UTC), including their review tasks
   const items: LearningItem[] = await prisma.learningItem.findMany({
     where: {
-      startDay: {
-        gte: startOfDay,
-        lt: endOfDay,
-      }
+      startDay: new Date(),
     },
     include: { reviews: true },
   });

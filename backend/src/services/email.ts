@@ -1,12 +1,16 @@
 import nodemailer from 'nodemailer'
 import { prisma } from "./prisma";
 
-type ReviewTaskWithItem = {
-  intervalDay: number;
+export type ReviewTaskWithItem = {
+  id: number;
+  itemId: number;
+  intervalDay?: number;
   item: {
+    id: number;
     topic: string;
-    startDay: string | Date; // Added startDay property
-    // add other fields if needed
+    goal: string[];
+    resources: string[];
+    startDay?: Date | string;
   };
 };
 
@@ -20,25 +24,33 @@ export async function sendReviewEmail(tasks: ReviewTaskWithItem[]) {
     }
   })
 
-  const taskList = tasks.map(task => `Topic: ${task.item.topic}, Interval: ${task.intervalDay} days`).join('\n')
+  // Only include tasks due today
+  const now = new Date();
+  const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0, 0);
+  const endOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59, 999);
+
+  const todaysTasks = tasks.filter(task => {
+    if (!task.item.startDay || typeof task.intervalDay !== 'number') return false;
+    const reviewDate = new Date(new Date(task.item.startDay).getTime() + task.intervalDay * 86400000);
+    return reviewDate >= startOfDay && reviewDate <= endOfDay;
+  });
+
+  const taskList = todaysTasks.map(task => {
+    const dateStr = task.item.startDay ? new Date(task.item.startDay).toLocaleDateString() : '';
+    return `Date: ${dateStr}\nTopic: ${task.item.topic}\nGoals: ${task.item.goal.join(', ')}\nResources: ${task.item.resources.join(', ')}\n`;
+  }).join('\n---\n');
+
   const mailOptions = {
     from: process.env.EMAIL_USER,
     to: process.env.EMAIL_TO,
     subject: 'Your Review Tasks for Today',
     text: `Here are your review tasks for today:\n${taskList}`,
-    html: `<h2>Your Review Tasks for Today</h2><ul>${tasks.map(task => `<li>Topic: ${task.item.topic}, Interval: ${task.intervalDay} days</li>`).join('')}</ul>`
-}
+    html: `<h2>Your Review Tasks for Today</h2><ul>${todaysTasks.map(task => {
+      const dateStr = task.item.startDay ? new Date(task.item.startDay).toLocaleDateString() : '';
+      return `<li><strong>Date:</strong> ${dateStr}<br/><strong>Topic:</strong> ${task.item.topic}<br/><strong>Goals:</strong> ${task.item.goal.join(', ')}<br/><strong>Resources:</strong> ${task.item.resources.join(', ')}</li>`;
+    }).join('')}</ul>`
+  };
 
   await transporter.sendMail(mailOptions)
 }
 
-export async function getTodayReviewTasks(): Promise<ReviewTaskWithItem[]> {
-  const now = new Date();
-  const start = new Date(now.setHours(0, 0, 0, 0));
-  const end = new Date(now.setHours(23, 59, 59, 999));
-  const tasks: ReviewTaskWithItem[] = await prisma.reviewTask.findMany({ include: { item: true } });
-  return tasks.filter((task: ReviewTaskWithItem) => {
-    const reviewDate = new Date(new Date(task.item.startDay).getTime() + task.intervalDay * 86400000);
-    return reviewDate >= start && reviewDate <= end;
-  });
-}
