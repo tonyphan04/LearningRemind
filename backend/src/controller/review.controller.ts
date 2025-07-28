@@ -18,6 +18,7 @@ export const getTodayReview = async (req: Request, res: Response) => {
   const userId = getUserIdFromRequest(req);
   if (!userId) return res.status(401).json({ error: "Unauthorized" });
   try {
+    // Get all collections for the user due for review today, including review fields
     const collections = await getTodayDueCollections(userId);
     return res.status(200).json(collections);
   } catch (err: any) {

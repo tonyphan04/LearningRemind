@@ -1,34 +1,45 @@
-import { useState } from "react";
+import React, { useState, useEffect } from "react";
 import TextField from "@mui/material/TextField";
 import Button from "@mui/material/Button";
 import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
 import Stack from "@mui/material/Stack";
-import { Link } from "react-router-dom";
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "";
+interface LoginPageProps {
+  onLoginSuccess: () => void;
+}
 
-const SignupForm = () => {
-  const [email, setEmail] = useState("");
+const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
+  const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
-  const [success, setSuccess] = useState("");
+  const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "";
+
+  useEffect(() => {
+    // If token exists, consider user logged in
+    const token = localStorage.getItem("token");
+    if (token) {
+      onLoginSuccess();
+    }
+  }, [onLoginSuccess]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
-    setSuccess("");
     try {
-      const res = await fetch(`${API_BASE_URL}/api/auth/signup`, {
+      const res = await fetch(`${API_BASE_URL}/api/auth/login`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ username: email, password }),
+        body: JSON.stringify({ username, password }),
       });
-      const data = await res.json();
       if (res.ok) {
-        setSuccess("Signup successful! You can now log in.");
+        // Store token in localStorage for later API calls
+        const { token } = await res.json();
+        localStorage.setItem("token", token);
+        onLoginSuccess();
       } else {
-        setError(data.error || "Signup failed");
+        const data = await res.json();
+        setError(data.error || "Login failed");
       }
     } catch (err) {
       setError("Network error: " + err);
@@ -48,15 +59,14 @@ const SignupForm = () => {
       }}
     >
       <Typography variant="h4" color="primary" mb={3} align="center">
-        Sign Up
+        Login
       </Typography>
       <form onSubmit={handleSubmit}>
         <Stack spacing={2}>
           <TextField
-            label="Email"
-            type="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
+            label="Username"
+            value={username}
+            onChange={(e) => setUsername(e.target.value)}
             required
             fullWidth
           />
@@ -69,25 +79,17 @@ const SignupForm = () => {
             fullWidth
           />
           <Button variant="contained" color="primary" type="submit" fullWidth>
-            Sign Up
+            Login
           </Button>
           {error && (
             <Typography color="error" align="center">
               {error}
             </Typography>
           )}
-          {success && (
-            <Typography color="success.main" align="center">
-              {success}
-            </Typography>
-          )}
-          <Typography align="center" variant="body2">
-            Already have an account? <Link to="/login">Login</Link>
-          </Typography>
         </Stack>
       </form>
     </Box>
   );
 };
 
-export default SignupForm;
+export default LoginPage;
