@@ -80,19 +80,7 @@ const ViewPage: React.FC = () => {
                     {folder.description}
                   </Typography>
                 )}
-                <Typography
-                  variant="body2"
-                  color="primary.main"
-                  mb={1}
-                  sx={{ fontWeight: 500 }}
-                >
-                  {Array.isArray(folder.words)
-                    ? folder.words.length
-                    : typeof folder.words === "number"
-                    ? folder.words
-                    : "-"}{" "}
-                  words
-                </Typography>
+
                 <Button
                   variant="contained"
                   color="primary"

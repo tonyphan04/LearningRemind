@@ -4,7 +4,7 @@ import Button from "@mui/material/Button";
 import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
 import Stack from "@mui/material/Stack";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "";
 
@@ -13,6 +13,7 @@ const SignupForm = () => {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
+  const navigate = useNavigate();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -24,11 +25,32 @@ const SignupForm = () => {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ username: email, password }),
       });
-      const data = await res.json();
+      let data;
+      try {
+        data = await res.json();
+        // Debug: log the data for inspection
+        console.log("Signup error response data:", data);
+      } catch {
+        // If response is not JSON, fallback to text
+        const text = await res.text();
+        setError(text || "Signup failed");
+        return;
+      }
       if (res.ok) {
         setSuccess("Signup successful! You can now log in.");
+        setTimeout(() => navigate("/login"), 1200);
+      } else if (data && data.error) {
+        if (typeof data.error === "string") {
+          setError(data.error);
+        } else if (typeof data.error === "object" && data.error !== null) {
+          // Collect all error messages from the object
+          const messages = Object.values(data.error).flat().filter(Boolean);
+          setError(messages.join(". "));
+        } else {
+          setError("Signup failed");
+        }
       } else {
-        setError(data.error || "Signup failed");
+        setError("Signup failed");
       }
     } catch (err) {
       setError("Network error: " + err);

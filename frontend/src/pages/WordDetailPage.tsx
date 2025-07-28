@@ -1,5 +1,9 @@
 import React from "react";
-import { useWordDetail } from "../hooks/useWordDetail";
+import { useParams } from "react-router-dom";
+import { useWordFetch } from "../hooks/useWordFetch";
+import { useWordEdit } from "../hooks/useWordEdit";
+import { useWordDelete } from "../hooks/useWordDelete";
+import { useSnackbarState } from "../hooks/useSnackbarState";
 import Spinner from "../components/Spinner";
 import SnackbarMessage from "../components/SnackbarMessage";
 import Button from "@mui/material/Button";
@@ -181,21 +185,30 @@ function WordDetailUI({
 // Container component for logic
 
 function WordDetailPageContainer() {
-  const {
-    loading,
-    error,
-    word,
-    editMode,
-    form,
-    snackbar,
-    handleEdit,
-    handleCancel,
-    handleChange,
-    handleSave,
-    handleDelete,
-    setError,
-    setSnackbar,
-  } = useWordDetail();
+  const { vocabId, folderId } = useParams();
+  const { word, setWord, loading, error, setError } = useWordFetch(vocabId);
+  const edit = useWordEdit(vocabId, word, setWord);
+  const del = useWordDelete(vocabId, folderId);
+  const { snackbar, setSnackbar } = useSnackbarState();
+
+  // Compose error and snackbar logic for UI
+  React.useEffect(() => {
+    if (edit.error) setSnackbar({ message: edit.error, severity: "error" });
+    if (del.error) setSnackbar({ message: del.error, severity: "error" });
+  }, [edit.error, del.error, setSnackbar]);
+
+  // Wrap save and delete to show snackbar on success
+  const handleSave = async () => {
+    const result = await edit.handleSave();
+    if (result?.success)
+      setSnackbar({ message: "Word updated!", severity: "success" });
+  };
+  const handleDelete = async () => {
+    const result = await del.handleDelete();
+    if (result?.success)
+      setSnackbar({ message: "Word deleted!", severity: "success" });
+  };
+
   return (
     <WordDetailUI
       loading={loading}
@@ -209,12 +222,12 @@ function WordDetailPageContainer() {
             }
           : null
       }
-      editMode={editMode}
-      form={form}
+      editMode={edit.editMode}
+      form={edit.form}
       snackbar={snackbar}
-      onEdit={handleEdit}
-      onCancel={handleCancel}
-      onChange={handleChange}
+      onEdit={edit.handleEdit}
+      onCancel={edit.handleCancel}
+      onChange={edit.handleChange}
       onSave={handleSave}
       onDelete={handleDelete}
       setError={setError}

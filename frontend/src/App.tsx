@@ -7,6 +7,7 @@ import FolderWordsPage from "./pages/FolderWordsPage";
 import WordDetailPage from "./pages/WordDetailPage";
 import Navigation from "./components/Navigation";
 import LoginPage from "./pages/LoginPage";
+import SignupForm from "./pages/SignupForm";
 import "./App.css";
 
 function App() {
@@ -15,7 +16,15 @@ function App() {
   return (
     <Router>
       {!isAuthenticated ? (
-        <LoginPage onLoginSuccess={() => setIsAuthenticated(true)} />
+        <Routes>
+          <Route path="/signup" element={<SignupForm />} />
+          <Route
+            path="*"
+            element={
+              <LoginPage onLoginSuccess={() => setIsAuthenticated(true)} />
+            }
+          />
+        </Routes>
       ) : (
         <>
           <Navigation />

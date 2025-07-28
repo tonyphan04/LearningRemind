@@ -4,7 +4,7 @@ import Button from "@mui/material/Button";
 import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
 import Stack from "@mui/material/Stack";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 
 interface LoginPageProps {
   onLoginSuccess: () => void;
@@ -42,8 +42,32 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
         onLoginSuccess();
         navigate("/"); // Redirect to home after login
       } else {
-        const data = await res.json();
-        setError(data.error || "Login failed");
+        let data;
+        try {
+          data = await res.json();
+          // Debug: log the data for inspection
+          console.log("Login error response data:", data);
+        } catch {
+          // If response is not JSON, fallback to text
+          const text = await res.text();
+          setError(text || "Login failed. Please check your credentials.");
+          return;
+        }
+        if (data && data.error) {
+          if (typeof data.error === "string") {
+            setError(data.error);
+          } else if (typeof data.error === "object" && data.error !== null) {
+            // Collect all error messages from the object
+            const messages = Object.values(data.error).flat().filter(Boolean);
+            setError(messages.join(". "));
+          } else {
+            setError("Login failed. Please check your credentials.");
+          }
+        } else if (res.status === 404) {
+          setError("Account does not exist. Please sign up.");
+        } else {
+          setError("Login failed. Please check your credentials.");
+        }
       }
     } catch (err) {
       setError("Network error: " + err);
@@ -90,6 +114,15 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
               {error}
             </Typography>
           )}
+          <Typography variant="body2" align="center" mt={2}>
+            Don't have an account?{" "}
+            <Link
+              to="/signup"
+              style={{ textDecoration: "none", color: "#1976d2" }}
+            >
+              Sign Up
+            </Link>
+          </Typography>
         </Stack>
       </form>
     </Box>
