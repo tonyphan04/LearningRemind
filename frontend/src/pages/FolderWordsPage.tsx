@@ -55,15 +55,25 @@ const FolderWordsPage: React.FC = () => {
         p: 4,
       }}
     >
-      <Typography
-        variant="h4"
-        color="primary"
-        mb={3}
-        align="center"
-        fontWeight={600}
-      >
-        Words in {folderName}
-      </Typography>
+      <Box sx={{ display: "flex", alignItems: "center", mb: 3 }}>
+        <Button
+          variant="outlined"
+          color="primary"
+          sx={{ mr: 2 }}
+          onClick={() => navigate("/view")}
+        >
+          Back
+        </Button>
+        <Typography
+          variant="h4"
+          color="primary"
+          align="center"
+          fontWeight={600}
+          sx={{ flex: 1 }}
+        >
+          Words in {folderName}
+        </Typography>
+      </Box>
       {(folderLoading || wordsLoading) && (
         <Typography align="center" color="text.secondary" mb={2}>
           Loading...

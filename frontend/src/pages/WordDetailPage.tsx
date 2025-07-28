@@ -1,74 +1,226 @@
 import React from "react";
-import { useParams } from "react-router-dom";
-import Box from "@mui/material/Box";
-import Typography from "@mui/material/Typography";
+import { useWordDetail } from "../hooks/useWordDetail";
 import Spinner from "../components/Spinner";
 import SnackbarMessage from "../components/SnackbarMessage";
-import { apiFetch } from "../api";
+import Button from "@mui/material/Button";
+import TextField from "@mui/material/TextField";
+import Box from "@mui/material/Box";
 
-type Word = {
-  word: string;
-  description: string;
-  example: string;
-};
+// UI component for displaying and editing word details
+interface WordDetailUIProps {
+  loading: boolean;
+  error: string | null;
+  word: {
+    word: string;
+    description: string;
+    example: string;
+    // [key: string]: any; // Removed to avoid using 'any'
+  } | null;
+  editMode: boolean;
+  form: {
+    word: string;
+    description: string;
+    example: string;
+    // [key: string]: string; // Uncomment and adjust if you expect dynamic string fields
+  };
+  snackbar: {
+    message: string;
+    severity: "error" | "info" | "success" | "warning";
+  } | null;
+  onEdit: () => void;
+  onCancel: () => void;
+  onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  onSave: () => void;
+  onDelete: () => void;
+  setError: (error: string | null) => void;
+  setSnackbar: (
+    snackbar: { message: string; severity: "error" | "success" } | null
+  ) => void;
+}
 
-const WordDetailPage: React.FC = () => {
-  const { vocabId } = useParams();
-  const [word, setWord] = React.useState<Word | null>(null);
-  const [loading, setLoading] = React.useState(true);
-  const [error, setError] = React.useState<string | null>(null);
-
-  React.useEffect(() => {
-    if (!vocabId) return;
-    setLoading(true);
-    apiFetch(`/api/vocabs/${vocabId}`)
-      .then(setWord)
-      .catch((e) => setError(e.message))
-      .finally(() => setLoading(false));
-  }, [vocabId]);
-
+function WordDetailUI({
+  loading,
+  error,
+  word,
+  editMode,
+  form,
+  snackbar,
+  onEdit,
+  onCancel,
+  onChange,
+  onSave,
+  onDelete,
+  setError,
+  setSnackbar,
+}: WordDetailUIProps) {
   return (
-    <Box
-      sx={{
-        maxWidth: 600,
-        mx: "auto",
-        mt: 6,
-        bgcolor: "white",
-        borderRadius: 2,
-        boxShadow: 3,
-        p: 4,
-      }}
-    >
-      {loading ? (
-        <Spinner />
-      ) : error ? (
-        <SnackbarMessage
-          open={!!error}
-          message={error}
-          severity="error"
-          onClose={() => setError(null)}
-        />
-      ) : word ? (
-        <>
-          <Typography variant="h4" color="primary" mb={2} fontWeight={600}>
-            {word.word}
-          </Typography>
-          <Typography variant="subtitle1" color="primary">
-            Description
-          </Typography>
-          <Typography mb={2}>{word.description}</Typography>
-          <Typography variant="subtitle1" color="primary">
-            Example
-          </Typography>
-          <Typography sx={{ fontStyle: "italic", color: "primary.main" }}>
-            {word.example}
-          </Typography>
-        </>
-      ) : (
-        <Typography>No word found.</Typography>
-      )}
-    </Box>
+    <>
+      <Box
+        sx={{
+          maxWidth: 600,
+          mx: "auto",
+          mt: 5,
+          bgcolor: "white",
+          borderRadius: 2,
+          boxShadow: 3,
+          p: 4,
+        }}
+      >
+        {loading ? (
+          <Spinner />
+        ) : error ? (
+          <SnackbarMessage
+            open={!!error}
+            message={error}
+            severity="error"
+            onClose={() => setError(null)}
+          />
+        ) : word ? (
+          <>
+            {editMode ? (
+              <>
+                <h2
+                  style={{
+                    color: "#1976d2",
+                    marginBottom: 16,
+                    fontWeight: 600,
+                  }}
+                >
+                  Edit Word
+                </h2>
+                <form
+                  style={{ display: "flex", flexDirection: "column", gap: 16 }}
+                >
+                  <TextField
+                    name="word"
+                    label="Word"
+                    value={form.word}
+                    onChange={onChange}
+                    fullWidth
+                    sx={{ mb: 1 }}
+                  />
+                  <TextField
+                    name="description"
+                    label="Description"
+                    value={form.description}
+                    onChange={onChange}
+                    fullWidth
+                    sx={{ mb: 1 }}
+                  />
+                  <TextField
+                    name="example"
+                    label="Example"
+                    value={form.example}
+                    onChange={onChange}
+                    fullWidth
+                  />
+                  <Box sx={{ display: "flex", gap: 2, mt: 2 }}>
+                    <Button
+                      variant="contained"
+                      color="primary"
+                      onClick={onSave}
+                    >
+                      Save
+                    </Button>
+                    <Button
+                      variant="outlined"
+                      color="primary"
+                      onClick={onCancel}
+                    >
+                      Cancel
+                    </Button>
+                  </Box>
+                </form>
+              </>
+            ) : (
+              <>
+                <h2
+                  style={{
+                    color: "#1976d2",
+                    marginBottom: 16,
+                    fontWeight: 600,
+                  }}
+                >
+                  {word.word}
+                </h2>
+                <div style={{ marginBottom: 12 }}>
+                  <strong style={{ color: "#1976d2" }}>Description</strong>
+                  <div>{word.description}</div>
+                </div>
+                <div style={{ marginBottom: 12 }}>
+                  <strong style={{ color: "#1976d2" }}>Example</strong>
+                  <div style={{ fontStyle: "italic", color: "#1976d2" }}>
+                    {word.example}
+                  </div>
+                </div>
+                <Box sx={{ display: "flex", gap: 2, mt: 3 }}>
+                  <Button variant="contained" color="primary" onClick={onEdit}>
+                    Edit
+                  </Button>
+                  <Button variant="outlined" color="error" onClick={onDelete}>
+                    Delete
+                  </Button>
+                </Box>
+              </>
+            )}
+          </>
+        ) : (
+          <div>No word found.</div>
+        )}
+      </Box>
+      <SnackbarMessage
+        open={!!snackbar}
+        message={snackbar?.message || ""}
+        severity={snackbar?.severity || "info"}
+        onClose={() => setSnackbar(null)}
+      />
+    </>
   );
-};
+}
 
-export default WordDetailPage;
+// Container component for logic
+
+function WordDetailPageContainer() {
+  const {
+    loading,
+    error,
+    word,
+    editMode,
+    form,
+    snackbar,
+    handleEdit,
+    handleCancel,
+    handleChange,
+    handleSave,
+    handleDelete,
+    setError,
+    setSnackbar,
+  } = useWordDetail();
+  return (
+    <WordDetailUI
+      loading={loading}
+      error={error}
+      word={
+        word
+          ? {
+              word: word.word,
+              description: word.description ?? "",
+              example: word.example ?? "",
+            }
+          : null
+      }
+      editMode={editMode}
+      form={form}
+      snackbar={snackbar}
+      onEdit={handleEdit}
+      onCancel={handleCancel}
+      onChange={handleChange}
+      onSave={handleSave}
+      onDelete={handleDelete}
+      setError={setError}
+      setSnackbar={setSnackbar}
+    />
+  );
+}
+
+export default WordDetailPageContainer;

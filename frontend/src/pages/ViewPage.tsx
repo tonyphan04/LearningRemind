@@ -86,7 +86,12 @@ const ViewPage: React.FC = () => {
                   mb={1}
                   sx={{ fontWeight: 500 }}
                 >
-                  {folder.words ? folder.words.length : "-"} words
+                  {Array.isArray(folder.words)
+                    ? folder.words.length
+                    : typeof folder.words === "number"
+                    ? folder.words
+                    : "-"}{" "}
+                  words
                 </Typography>
                 <Button
                   variant="contained"
