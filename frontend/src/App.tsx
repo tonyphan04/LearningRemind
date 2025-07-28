@@ -12,23 +12,25 @@ import "./App.css";
 function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
 
-  if (!isAuthenticated) {
-    return <LoginPage onLoginSuccess={() => setIsAuthenticated(true)} />;
-  }
-
   return (
     <Router>
-      <Navigation />
-      <Routes>
-        <Route path="/" element={<HomePage />} />
-        <Route path="/create" element={<CreatePage />} />
-        <Route path="/view" element={<ViewPage />} />
-        <Route path="/view/folder" element={<FolderWordsPage />} />
-        <Route
-          path="/view/folder/:folderId/vocab/:vocabId"
-          element={<WordDetailPage />}
-        />
-      </Routes>
+      {!isAuthenticated ? (
+        <LoginPage onLoginSuccess={() => setIsAuthenticated(true)} />
+      ) : (
+        <>
+          <Navigation />
+          <Routes>
+            <Route path="/" element={<HomePage />} />
+            <Route path="/create" element={<CreatePage />} />
+            <Route path="/view" element={<ViewPage />} />
+            <Route path="/view/folder" element={<FolderWordsPage />} />
+            <Route
+              path="/view/folder/:folderId/vocab/:vocabId"
+              element={<WordDetailPage />}
+            />
+          </Routes>
+        </>
+      )}
     </Router>
   );
 }

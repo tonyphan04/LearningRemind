@@ -4,6 +4,7 @@ import Button from "@mui/material/Button";
 import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
 import Stack from "@mui/material/Stack";
+import { useNavigate } from "react-router-dom";
 
 interface LoginPageProps {
   onLoginSuccess: () => void;
@@ -14,14 +15,16 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "";
+  const navigate = useNavigate();
 
   useEffect(() => {
     // If token exists, consider user logged in
     const token = localStorage.getItem("token");
     if (token) {
       onLoginSuccess();
+      navigate("/");
     }
-  }, [onLoginSuccess]);
+  }, [onLoginSuccess, navigate]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -37,6 +40,7 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
         const { token } = await res.json();
         localStorage.setItem("token", token);
         onLoginSuccess();
+        navigate("/"); // Redirect to home after login
       } else {
         const data = await res.json();
         setError(data.error || "Login failed");
