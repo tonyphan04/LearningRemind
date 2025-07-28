@@ -8,8 +8,6 @@ import helmet from "helmet";
 import morgan from "morgan";
 import rateLimit from "express-rate-limit";
 import dotenv from "dotenv";
-import learningRoutes from "./src/routes/learning.route";
-import reviewRoutes from "./src/routes/review.route";
 import bodyParser from "body-parser";
 import swaggerUi from "swagger-ui-express";
 import swaggerJsdoc from "swagger-jsdoc";
@@ -50,8 +48,6 @@ app.use(limiter);
 // Health check endpoint
 app.get("/api/health", (_req, res) => res.status(200).json({ status: "ok" }));
 
-app.use("/api/notes", learningRoutes);
-app.use("/api/reviews", reviewRoutes);
 
 // 404 handler
 app.use((req, res) => {
