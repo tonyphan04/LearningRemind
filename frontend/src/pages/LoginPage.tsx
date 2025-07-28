@@ -5,6 +5,7 @@ import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
 import Stack from "@mui/material/Stack";
 import { useNavigate, Link } from "react-router-dom";
+import { useLogin } from "../hooks/useAuth";
 
 interface LoginPageProps {
   onLoginSuccess: () => void;
@@ -13,8 +14,7 @@ interface LoginPageProps {
 const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
-  const [error, setError] = useState("");
-  const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "";
+  const { login, error, setError, loading } = useLogin(onLoginSuccess);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -29,49 +29,7 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
-    try {
-      const res = await fetch(`${API_BASE_URL}/api/auth/login`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ username, password }),
-      });
-      if (res.ok) {
-        // Store token in localStorage for later API calls
-        const { token } = await res.json();
-        localStorage.setItem("token", token);
-        onLoginSuccess();
-        navigate("/"); // Redirect to home after login
-      } else {
-        let data;
-        try {
-          data = await res.json();
-          // Debug: log the data for inspection
-          console.log("Login error response data:", data);
-        } catch {
-          // If response is not JSON, fallback to text
-          const text = await res.text();
-          setError(text || "Login failed. Please check your credentials.");
-          return;
-        }
-        if (data && data.error) {
-          if (typeof data.error === "string") {
-            setError(data.error);
-          } else if (typeof data.error === "object" && data.error !== null) {
-            // Collect all error messages from the object
-            const messages = Object.values(data.error).flat().filter(Boolean);
-            setError(messages.join(". "));
-          } else {
-            setError("Login failed. Please check your credentials.");
-          }
-        } else if (res.status === 404) {
-          setError("Account does not exist. Please sign up.");
-        } else {
-          setError("Login failed. Please check your credentials.");
-        }
-      }
-    } catch (err) {
-      setError("Network error: " + err);
-    }
+    await login(username, password);
   };
 
   return (
@@ -106,8 +64,14 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
             required
             fullWidth
           />
-          <Button variant="contained" color="primary" type="submit" fullWidth>
-            Login
+          <Button
+            variant="contained"
+            color="primary"
+            type="submit"
+            fullWidth
+            disabled={loading}
+          >
+            {loading ? "Logging in..." : "Login"}
           </Button>
           {error && (
             <Typography color="error" align="center">

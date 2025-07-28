@@ -4,57 +4,19 @@ import Button from "@mui/material/Button";
 import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
 import Stack from "@mui/material/Stack";
-import { Link, useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "";
+import { useSignup } from "../hooks/useAuth";
 
 const SignupForm = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [error, setError] = useState("");
-  const [success, setSuccess] = useState("");
-  const navigate = useNavigate();
+  const { signup, error, setError, success, loading } = useSignup();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
-    setSuccess("");
-    try {
-      const res = await fetch(`${API_BASE_URL}/api/auth/signup`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ username: email, password }),
-      });
-      let data;
-      try {
-        data = await res.json();
-        // Debug: log the data for inspection
-        console.log("Signup error response data:", data);
-      } catch {
-        // If response is not JSON, fallback to text
-        const text = await res.text();
-        setError(text || "Signup failed");
-        return;
-      }
-      if (res.ok) {
-        setSuccess("Signup successful! You can now log in.");
-        setTimeout(() => navigate("/login"), 1200);
-      } else if (data && data.error) {
-        if (typeof data.error === "string") {
-          setError(data.error);
-        } else if (typeof data.error === "object" && data.error !== null) {
-          // Collect all error messages from the object
-          const messages = Object.values(data.error).flat().filter(Boolean);
-          setError(messages.join(". "));
-        } else {
-          setError("Signup failed");
-        }
-      } else {
-        setError("Signup failed");
-      }
-    } catch (err) {
-      setError("Network error: " + err);
-    }
+    await signup(email, password);
   };
 
   return (
@@ -90,8 +52,14 @@ const SignupForm = () => {
             required
             fullWidth
           />
-          <Button variant="contained" color="primary" type="submit" fullWidth>
-            Sign Up
+          <Button
+            variant="contained"
+            color="primary"
+            type="submit"
+            fullWidth
+            disabled={loading}
+          >
+            {loading ? "Signing up..." : "Sign Up"}
           </Button>
           {error && (
             <Typography color="error" align="center">
