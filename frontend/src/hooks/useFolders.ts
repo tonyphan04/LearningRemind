@@ -7,13 +7,18 @@ export function useFolders() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
+  const fetchFolders = () => {
     setLoading(true);
     apiFetch("/api/folders")
       .then((data) => setFolders(data))
       .catch((e) => setError(e.message))
       .finally(() => setLoading(false));
+  };
+
+  useEffect(() => {
+    fetchFolders();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  return { folders, loading, error };
+  return { folders, loading, error, refetch: fetchFolders };
 }
