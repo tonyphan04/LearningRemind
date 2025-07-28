@@ -11,6 +11,7 @@ import dotenv from "dotenv";
 import bodyParser from "body-parser";
 import swaggerUi from "swagger-ui-express";
 import swaggerJsdoc from "swagger-jsdoc";
+import router from "./src/routes/index";
 
 dotenv.config();
 
@@ -48,6 +49,8 @@ app.use(limiter);
 // Health check endpoint
 app.get("/api/health", (_req, res) => res.status(200).json({ status: "ok" }));
 
+// Use the main router for all API routes under /api
+app.use("/api", router);
 
 // 404 handler
 app.use((req, res) => {
