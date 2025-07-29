@@ -57,24 +57,6 @@ async function main() {
     },
   });
 
-  // Create review tasks
-  await prisma.reviewTask.create({
-    data: {
-      collectionId: collection1.id,
-      intervalIndex: 0,
-      nextReview: new Date(Date.now() - 86400000), // yesterday (due)
-      lastReviewed: new Date(Date.now() - 86400000), // yesterday
-    },
-  });
-  await prisma.reviewTask.create({
-    data: {
-      collectionId: collection2.id,
-      intervalIndex: 1,
-      nextReview: new Date(Date.now() + 86400000), // tomorrow (not due)
-      lastReviewed: new Date(Date.now() - 86400000), // yesterday
-    },
-  });
-
   // Create words (vocabs)
   await prisma.word.createMany({
     data: [

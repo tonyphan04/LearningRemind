@@ -8,6 +8,20 @@ CREATE TABLE "User" (
 );
 
 -- CreateTable
+CREATE TABLE "UploadedFile" (
+    "id" SERIAL NOT NULL,
+    "filename" TEXT NOT NULL,
+    "mimetype" TEXT NOT NULL,
+    "size" INTEGER NOT NULL,
+    "data" BYTEA NOT NULL,
+    "uploadedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "userId" INTEGER NOT NULL,
+    "collectionId" INTEGER NOT NULL,
+
+    CONSTRAINT "UploadedFile_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
 CREATE TABLE "Collection" (
     "id" SERIAL NOT NULL,
     "name" TEXT NOT NULL,
@@ -49,6 +63,12 @@ CREATE UNIQUE INDEX "User_email_key" ON "User"("email");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "ReviewTask_collectionId_key" ON "ReviewTask"("collectionId");
+
+-- AddForeignKey
+ALTER TABLE "UploadedFile" ADD CONSTRAINT "UploadedFile_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "UploadedFile" ADD CONSTRAINT "UploadedFile_collectionId_fkey" FOREIGN KEY ("collectionId") REFERENCES "Collection"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "Collection" ADD CONSTRAINT "Collection_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE RESTRICT ON UPDATE CASCADE;

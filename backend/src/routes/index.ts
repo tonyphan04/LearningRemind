@@ -14,12 +14,19 @@ import * as auth from "../controller/auth.controller";
 import * as folder from "../controller/folder.controller";
 import * as vocab from "../controller/vocab.controller";
 import * as review from "../controller/review.controller";
+import { upload } from "../middleware/upload";
 
 const router = Router();
 
 
 /**
  * @swagger
+ * components:
+ *   securitySchemes:
+ *     bearerAuth:
+ *       type: http
+ *       scheme: bearer
+ *       bearerFormat: JWT
  * tags:
  *   - name: Auth
  *     description: User authentication
@@ -345,6 +352,43 @@ router.get("/folders/search", folder.getFolderByName);
  *         description: Unauthorized
  */
 router.post("/vocabs", vocab.createVocab);
+/**
+ * @swagger
+ * /api/vocabs/file/{collectionId}:
+ *   post:
+ *     summary: Upload a file to import vocabs into a collection
+ *     tags: [Vocabs]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: collectionId
+ *         schema:
+ *           type: integer
+ *         required: true
+ *         description: Collection ID to import vocabs into
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         multipart/form-data:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               file:
+ *                 type: string
+ *                 format: binary
+ *                 description: The file to upload (.csv, .txt, .xlsx, .pdf, .docx)
+ *     responses:
+ *       200:
+ *         description: File uploaded and vocabs imported
+ *       400:
+ *         description: Validation error or file error
+ *       401:
+ *         description: Unauthorized
+ *       404:
+ *         description: Collection not found or not yours
+ */
+router.post("/vocabs/file/:collectionId", upload.single("file"), vocab.createVocabFromFile);
 router.get("/vocabs", vocab.getVocabs);
 
 /**

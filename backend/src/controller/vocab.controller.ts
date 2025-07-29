@@ -2,6 +2,8 @@ import { Request, Response } from "express";
 import { prisma } from "../services/prisma";
 import jwt from "jsonwebtoken";
 import { createVocabSchema, updateVocabSchema } from "../validation/vocab.validation";
+import { parse } from "csv-parse/sync";
+import { isStructuredFile, normalizeHeaders } from "../utils/fileUpload";
 
 function getUserIdFromRequest(req: Request): number | null {
   const authHeader = req.headers.authorization;
@@ -44,6 +46,104 @@ export const createVocab = async (req: Request, res: Response) => {
     return res.status(500).json({ error: err.message });
   }
 };
+
+export const createVocabFromFile = async (req: Request, res: Response) => {
+  const userId = getUserIdFromRequest(req);
+  const collectionId  = req.params.collectionId;
+  // Use req.file for Multer single file upload
+  const file = req.file;
+  if (!userId) return res.status(401).json({ error: "Unauthorized" });
+  if (!collectionId) return res.status(400).json({ error: "collectionId is required" });
+  if (!file) return res.status(400).json({ error: "File is required. Make sure you are using multipart/form-data and Multer middleware." });
+
+  try {
+    // Find collection to ensure it belongs to the user
+    const collection = await prisma.collection.findUnique({ where: { id: Number(collectionId), userId } });
+    if (!collection) return res.status(404).json({ error: "Collection not found or not yours" });
+    //check if size of file is less than 10MB
+    if (file.size > 10 * 1024 * 1024) {
+    return res.status(400).json({ error: "File size must be less than 10MB" });
+    }
+
+    const allowedExtensions = [".pdf", ".docx", ".txt", ".xlsx"];
+    const ext = "." + file.originalname.split('.').pop()?.toLowerCase();
+
+    if (!allowedExtensions.includes(ext)) {
+      return res.status(400).json({ error: "File type not supported. Allowed types: .pdf, .docx, .txt, .xlsx" });
+    }
+
+    try {
+      const fileRecord = await prisma.uploadedFile.create({
+        data: {
+          filename: file.originalname,
+          mimetype: file.mimetype,
+          size: file.size,
+          data: file.buffer,
+          collectionId: Number(collectionId),
+          userId: Number(userId), // Associate file with user
+        }
+      });
+
+      res.json({
+        success: true,
+        fileId: fileRecord.id,
+        message: "File uploaded and saved to database"
+      });
+    } catch (err) {
+      console.error(err);
+      res.status(500).json({ error: "Failed to save file" });
+    }
+    // start parsing content
+    // if file is structured like "word,description,example" per line
+    if (isStructuredFile(file)){
+      const content = file.buffer.toString("utf-8");
+      const records = parse(content, { skip_empty_lines: true });
+
+      const headers = records[0];
+      const rows = records.slice(1);
+
+      const headerIndexes = normalizeHeaders(headers);
+
+      const words = rows.map((row: string[]) => ({
+        word: row[headerIndexes.word],
+        description: row[headerIndexes.description],
+        example: headerIndexes.example !== undefined ? row[headerIndexes.example] : null,
+        collectionId: Number(collectionId),
+      }));
+      //validate each word using createVocabSchema
+      const validationResults = words
+        .map((word) => createVocabSchema.safeParse(word))
+        .filter((result) => result.success)
+        .map((result) => result.data);
+      const errors = words.length - validationResults.length;
+      if (errors > 0) {
+        return res.status(400).json({ error: "Validation failed", details: "Some words failed validation." });
+      }
+      // if validatewords are already in db, dont add them again
+      const existingWords = await prisma.word.findMany({  
+        where: {
+          collectionId: Number(collectionId),
+          word: {
+            in: validationResults.map((w) => w.word)
+          }
+        },
+        select: { word: true }
+      });
+      if (existingWords.length > 0) {
+        return res.status(400).json({ error: "Some words already exist in the collection", existingWords });
+      }
+      // filter out existing words
+      const newWords = validationResults.filter(w => !existingWords.some(existing => existing.word === w.word));
+      // save all words to the database
+      await prisma.word.createMany({
+        data: newWords
+      });
+    }
+  } catch (err: any) {
+    return res.status(500).json({ error: err.message });
+  }
+
+}
 
 export const getVocabs = async (req: Request, res: Response) => {
   const userId = getUserIdFromRequest(req);
