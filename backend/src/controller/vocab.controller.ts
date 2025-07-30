@@ -119,7 +119,7 @@ export const createVocabFromFile = async (req: Request, res: Response) => {
       if (errors > 0) {
         return res.status(400).json({ error: "Validation failed", details: "Some words failed validation." });
       }
-      // if validatewords are already in db, dont add them again
+      
       const existingWords = await prisma.word.findMany({  
         where: {
           collectionId: Number(collectionId),
