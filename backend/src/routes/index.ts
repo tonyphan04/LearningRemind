@@ -389,6 +389,70 @@ router.post("/vocabs", vocab.createVocab);
  *         description: Collection not found or not yours
  */
 router.post("/vocabs/file/:collectionId", upload.single("file"), vocab.createVocabFromFile);
+/**
+ * @swagger
+ * /api/vocabs/ai-generate/{collectionId}:
+ *   post:
+ *     summary: Generate vocabulary words using AI (OpenAI) for a collection
+ *     tags: [Vocabs]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: collectionId
+ *         schema:
+ *           type: integer
+ *         required: true
+ *         description: Collection ID to add generated words to
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - topic
+ *               - count
+ *             properties:
+ *               topic:
+ *                 type: string
+ *                 example: Animals
+ *                 description: Topic for vocabulary generation
+ *               count:
+ *                 type: integer
+ *                 example: 5
+ *                 description: Number of words to generate (max 20)
+ *     responses:
+ *       200:
+ *         description: Words generated and added to collection
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 words:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                     properties:
+ *                       word:
+ *                         type: string
+ *                       description:
+ *                         type: string
+ *                       example:
+ *                         type: string
+ *       400:
+ *         description: Validation error or missing parameters
+ *       401:
+ *         description: Unauthorized
+ *       404:
+ *         description: Collection not found or not yours
+ *       500:
+ *         description: AI generation failed
+ */
+router.post("/vocabs/ai-generate/:collectionId", vocab.generateWordsByAI);
 router.get("/vocabs", vocab.getVocabs);
 
 /**

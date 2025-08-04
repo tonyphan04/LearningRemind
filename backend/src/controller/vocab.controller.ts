@@ -4,6 +4,11 @@ import jwt from "jsonwebtoken";
 import { createVocabSchema, updateVocabSchema } from "../validation/vocab.validation";
 import { parse } from "csv-parse/sync";
 import { isStructuredFile, normalizeHeaders } from "../utils/fileUpload";
+import OpenAI from "openai";
+
+const openai = new OpenAI({
+  apiKey: process.env.OPENAI_API_KEY || "your-openai-api-key",
+});
 
 function getUserIdFromRequest(req: Request): number | null {
   const authHeader = req.headers.authorization;
@@ -144,6 +149,49 @@ export const createVocabFromFile = async (req: Request, res: Response) => {
   }
 
 }
+
+export const generateWordsByAI = async (req: Request, res: Response) => {
+  const userId = getUserIdFromRequest(req);
+  const collectionId  = req.params.collectionId;
+  const { topic, count} = req.body;
+  if (!userId) return res.status(401).json({ error: "Unauthorized" });
+  if (!topic || !count || !collectionId) return res.status(400).json({ error: "Missing topic, count, or collectionId" });
+  if (count > 20) return res.status(400).json({ error: "Count must be 20 or less" });
+  if (typeof count !== "number" || count <= 0) {
+    return res.status(400).json({ error: "Count must be a positive number" });
+  }
+  try {
+    // Prompt for OpenAI
+    const prompt = `Generate ${count} vocabulary words about '${topic}'. For each word, provide: word, definition, and example sentence. Format as CSV: word,description,example.`;
+    const response = await openai.chat.completions.create({
+      model: "gpt-4o-mini",
+      messages: [
+        { role: "user", content: prompt }
+      ],
+      max_tokens: 1000
+    });
+    const aiText = response.choices[0]?.message?.content || "";
+
+    // Parse CSV output
+    const lines = aiText.split("\n").filter(Boolean);
+    const words = lines.map(line => {
+      const [word, description, example] = line.split(",");
+      return {
+        word: word?.trim(),
+        description: description?.trim(),
+        example: example?.trim(),
+        collectionId: Number(collectionId)
+      };
+    }).filter(w => w.word && w.description);
+
+    // Save to DB
+    await prisma.word.createMany({ data: words });
+    res.json({ success: true, words });
+  } catch (err: any) {
+    console.error(err);
+    res.status(500).json({ error: "AI generation failed", details: err.message });
+  }
+};
 
 export const getVocabs = async (req: Request, res: Response) => {
   const userId = getUserIdFromRequest(req);
