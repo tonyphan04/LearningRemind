@@ -6,198 +6,21 @@ import { useWordDelete } from "../hooks/useWordDelete";
 import { useSnackbarState } from "../hooks/useSnackbarState";
 import Spinner from "../components/Spinner";
 import SnackbarMessage from "../components/SnackbarMessage";
-import Button from "@mui/material/Button";
-import TextField from "@mui/material/TextField";
-import Box from "@mui/material/Box";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 
-// UI component for displaying and editing word details
-interface WordDetailUIProps {
-  loading: boolean;
-  error: string | null;
-  word: {
-    word: string;
-    description: string;
-    example: string;
-    // [key: string]: any; // Removed to avoid using 'any'
-  } | null;
-  editMode: boolean;
-  form: {
-    word: string;
-    description: string;
-    example: string;
-    // [key: string]: string; // Uncomment and adjust if you expect dynamic string fields
-  };
-  snackbar: {
-    message: string;
-    severity: "error" | "info" | "success" | "warning";
-  } | null;
-  onEdit: () => void;
-  onCancel: () => void;
-  onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
-  onSave: () => void;
-  onDelete: () => void;
-  setError: (error: string | null) => void;
-  setSnackbar: (
-    snackbar: { message: string; severity: "error" | "success" } | null
-  ) => void;
-}
-
-function WordDetailUI({
-  loading,
-  error,
-  word,
-  editMode,
-  form,
-  snackbar,
-  onEdit,
-  onCancel,
-  onChange,
-  onSave,
-  onDelete,
-  setError,
-  setSnackbar,
-}: WordDetailUIProps) {
-  return (
-    <>
-      <Box
-        sx={{
-          maxWidth: 600,
-          mx: "auto",
-          mt: 5,
-          bgcolor: "white",
-          borderRadius: 2,
-          boxShadow: 3,
-          p: 4,
-        }}
-      >
-        {loading ? (
-          <Spinner />
-        ) : error ? (
-          <SnackbarMessage
-            open={!!error}
-            message={error}
-            severity="error"
-            onClose={() => setError(null)}
-          />
-        ) : word ? (
-          <>
-            {editMode ? (
-              <>
-                <h2
-                  style={{
-                    color: "#1976d2",
-                    marginBottom: 16,
-                    fontWeight: 600,
-                  }}
-                >
-                  Edit Word
-                </h2>
-                <form
-                  style={{ display: "flex", flexDirection: "column", gap: 16 }}
-                >
-                  <TextField
-                    name="word"
-                    label="Word"
-                    value={form.word}
-                    onChange={onChange}
-                    fullWidth
-                    sx={{ mb: 1 }}
-                  />
-                  <TextField
-                    name="description"
-                    label="Description"
-                    value={form.description}
-                    onChange={onChange}
-                    fullWidth
-                    sx={{ mb: 1 }}
-                  />
-                  <TextField
-                    name="example"
-                    label="Example"
-                    value={form.example}
-                    onChange={onChange}
-                    fullWidth
-                  />
-                  <Box sx={{ display: "flex", gap: 2, mt: 2 }}>
-                    <Button
-                      variant="contained"
-                      color="primary"
-                      onClick={onSave}
-                    >
-                      Save
-                    </Button>
-                    <Button
-                      variant="outlined"
-                      color="primary"
-                      onClick={onCancel}
-                    >
-                      Cancel
-                    </Button>
-                  </Box>
-                </form>
-              </>
-            ) : (
-              <>
-                <h2
-                  style={{
-                    color: "#1976d2",
-                    marginBottom: 16,
-                    fontWeight: 600,
-                  }}
-                >
-                  {word.word}
-                </h2>
-                <div style={{ marginBottom: 12 }}>
-                  <strong style={{ color: "#1976d2" }}>Description</strong>
-                  <div>{word.description}</div>
-                </div>
-                <div style={{ marginBottom: 12 }}>
-                  <strong style={{ color: "#1976d2" }}>Example</strong>
-                  <div style={{ fontStyle: "italic", color: "#1976d2" }}>
-                    {word.example}
-                  </div>
-                </div>
-                <Box sx={{ display: "flex", gap: 2, mt: 3 }}>
-                  <Button variant="contained" color="primary" onClick={onEdit}>
-                    Edit
-                  </Button>
-                  <Button variant="outlined" color="error" onClick={onDelete}>
-                    Delete
-                  </Button>
-                </Box>
-              </>
-            )}
-          </>
-        ) : (
-          <div>No word found.</div>
-        )}
-      </Box>
-      <SnackbarMessage
-        open={!!snackbar}
-        message={snackbar?.message || ""}
-        severity={snackbar?.severity || "info"}
-        onClose={() => setSnackbar(null)}
-      />
-    </>
-  );
-}
-
-// Container component for logic
-
-function WordDetailPageContainer() {
+function WordDetailPage() {
   const { vocabId, folderId } = useParams();
   const { word, setWord, loading, error, setError } = useWordFetch(vocabId);
   const edit = useWordEdit(vocabId, word, setWord);
   const del = useWordDelete(vocabId, folderId);
   const { snackbar, setSnackbar } = useSnackbarState();
 
-  // Compose error and snackbar logic for UI
   React.useEffect(() => {
     if (edit.error) setSnackbar({ message: edit.error, severity: "error" });
     if (del.error) setSnackbar({ message: del.error, severity: "error" });
   }, [edit.error, del.error, setSnackbar]);
 
-  // Wrap save and delete to show snackbar on success
   const handleSave = async () => {
     const result = await edit.handleSave();
     if (result?.success)
@@ -210,30 +33,118 @@ function WordDetailPageContainer() {
   };
 
   return (
-    <WordDetailUI
-      loading={loading}
-      error={error}
-      word={
-        word
-          ? {
-              word: word.word,
-              description: word.description ?? "",
-              example: word.example ?? "",
-            }
-          : null
-      }
-      editMode={edit.editMode}
-      form={edit.form}
-      snackbar={snackbar}
-      onEdit={edit.handleEdit}
-      onCancel={edit.handleCancel}
-      onChange={edit.handleChange}
-      onSave={handleSave}
-      onDelete={handleDelete}
-      setError={setError}
-      setSnackbar={setSnackbar}
-    />
+    <div className="min-h-screen bg-gradient-to-br from-blue-100 to-white flex items-center justify-center py-10">
+      <div className="max-w-xl w-full bg-white rounded-2xl shadow-xl p-8 border border-blue-200">
+        {loading ? (
+          <Spinner />
+        ) : error ? (
+          <SnackbarMessage
+            open={!!error}
+            message={error}
+            severity="error"
+            onClose={() => setError(null)}
+          />
+        ) : word ? (
+          edit.editMode ? (
+            <>
+              <h2 className="text-2xl font-extrabold text-blue-700 mb-6 text-center tracking-tight">
+                Edit Word
+              </h2>
+              <form className="flex flex-col gap-4">
+                <div>
+                  <label className="block text-sm font-medium mb-1">Word</label>
+                  <Input
+                    name="word"
+                    value={edit.form.word}
+                    onChange={edit.handleChange}
+                    className="w-full border border-blue-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-1">
+                    Description
+                  </label>
+                  <Input
+                    name="description"
+                    value={edit.form.description}
+                    onChange={edit.handleChange}
+                    className="w-full border border-blue-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-1">
+                    Example
+                  </label>
+                  <Input
+                    name="example"
+                    value={edit.form.example}
+                    onChange={edit.handleChange}
+                    className="w-full border border-blue-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400"
+                  />
+                </div>
+                <div className="flex gap-4 mt-2">
+                  <Button
+                    type="button"
+                    onClick={handleSave}
+                    className="w-32 bg-blue-600 text-white hover:bg-blue-700 rounded-lg font-semibold"
+                  >
+                    Save
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={edit.handleCancel}
+                    className="w-32 border-blue-500 text-blue-600 hover:bg-blue-50 rounded-lg font-semibold"
+                  >
+                    Cancel
+                  </Button>
+                </div>
+              </form>
+            </>
+          ) : (
+            <>
+              <h2 className="text-2xl font-extrabold text-blue-700 mb-6 text-center tracking-tight">
+                {word.word}
+              </h2>
+              <div className="mb-3">
+                <strong className="text-blue-600">Description</strong>
+                <div>{word.description}</div>
+              </div>
+              <div className="mb-3">
+                <strong className="text-blue-600">Example</strong>
+                <div className="italic text-blue-500">{word.example}</div>
+              </div>
+              <div className="flex gap-4 mt-4">
+                <Button
+                  type="button"
+                  onClick={edit.handleEdit}
+                  className="w-32 bg-blue-600 text-white hover:bg-blue-700 rounded-lg font-semibold"
+                >
+                  Edit
+                </Button>
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={handleDelete}
+                  className="w-32 border-blue-500 text-blue-600 hover:bg-blue-50 rounded-lg font-semibold"
+                >
+                  Delete
+                </Button>
+              </div>
+            </>
+          )
+        ) : (
+          <div>No word found.</div>
+        )}
+      </div>
+      <SnackbarMessage
+        open={!!snackbar}
+        message={snackbar?.message || ""}
+        severity={snackbar?.severity || "info"}
+        onClose={() => setSnackbar(null)}
+      />
+    </div>
   );
 }
 
-export default WordDetailPageContainer;
+export default WordDetailPage;

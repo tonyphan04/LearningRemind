@@ -1,7 +1,5 @@
 import { Link, useNavigate } from "react-router-dom";
-import Button from "@mui/material/Button";
-import Box from "@mui/material/Box";
-import Stack from "@mui/material/Stack";
+import { Button } from "../components/ui/button";
 import { removeToken } from "../utils/token";
 
 const Navigation = () => {
@@ -12,68 +10,24 @@ const Navigation = () => {
     window.location.reload();
   };
   return (
-    <Box
-      component="nav"
-      sx={{
-        position: "fixed",
-        top: 0,
-        left: 0,
-        width: "100%",
-        zIndex: 1000,
-        bgcolor: "#fff",
-        boxShadow: "0 2px 8px rgba(0,0,0,0.05)",
-        p: { xs: 1, sm: 2 },
-        borderBottom: "1px solid #ccc",
-      }}
-    >
-      <Stack
-        direction={{ xs: "column", sm: "row" }}
-        alignItems={{ xs: "stretch", sm: "center" }}
-        justifyContent="space-between"
-        spacing={2}
-      >
-        <Stack direction="row" spacing={2} flexWrap="wrap">
-          <Link
-            to="/"
-            style={{
-              textDecoration: "none",
-              color: "#007bff",
-              fontWeight: 500,
-            }}
-          >
+    <nav className="fixed top-0 left-0 w-full z-50 bg-white border-b border-gray-200 shadow">
+      <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between px-4 py-2">
+        <div className="flex flex-row gap-4 flex-wrap">
+          <Link to="/" className="text-blue-600 hover:underline">
             Home
           </Link>
-          <Link
-            to="/create"
-            style={{
-              textDecoration: "none",
-              color: "#007bff",
-              fontWeight: 500,
-            }}
-          >
+          <Link to="/create" className="text-blue-600 hover:underline">
             Create
           </Link>
-          <Link
-            to="/view"
-            style={{
-              textDecoration: "none",
-              color: "#007bff",
-              fontWeight: 500,
-            }}
-          >
+          <Link to="/view" className="text-blue-600 hover:underline">
             View
           </Link>
-        </Stack>
-        <Button
-          variant="outlined"
-          color="error"
-          onClick={handleLogout}
-          sx={{ minWidth: 90 }}
-        >
+        </div>
+        <Button onClick={handleLogout} className="ml-4">
           Logout
         </Button>
-      </Stack>
-    </Box>
+      </div>
+    </nav>
   );
 };
 

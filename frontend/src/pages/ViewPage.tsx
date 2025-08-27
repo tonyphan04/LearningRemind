@@ -1,19 +1,6 @@
 import React, { useState } from "react";
-import IconButton from "@mui/material/IconButton";
-import EditIcon from "@mui/icons-material/Edit";
-import DeleteIcon from "@mui/icons-material/Delete";
-import Dialog from "@mui/material/Dialog";
-import DialogTitle from "@mui/material/DialogTitle";
-import DialogContent from "@mui/material/DialogContent";
-import DialogActions from "@mui/material/DialogActions";
-import TextField from "@mui/material/TextField";
+import { Button } from "@/components/ui/button";
 import { useDeleteFolder, useEditFolder } from "../hooks/useFolderActions";
-import Box from "@mui/material/Box";
-import Typography from "@mui/material/Typography";
-import Button from "@mui/material/Button";
-import Stack from "@mui/material/Stack";
-import Card from "@mui/material/Card";
-import CardContent from "@mui/material/CardContent";
 import { useNavigate } from "react-router-dom";
 import { useFolders } from "../hooks/useFolders";
 import type { Folder } from "../types/common";
@@ -92,207 +79,153 @@ const ViewPage: React.FC = () => {
   }, [successMessage]);
 
   return (
-    <Box
-      sx={{
-        maxWidth: 900,
-        mx: "auto",
-        mt: 6,
-        bgcolor: "white",
-        borderRadius: 2,
-        boxShadow: 3,
-        p: 4,
-      }}
-    >
-      <Typography
-        variant="h4"
-        color="primary"
-        mb={3}
-        align="center"
-        sx={{ fontWeight: 600 }}
-      >
-        Your Folders
-      </Typography>
-      <Stack
-        spacing={3}
-        direction="row"
-        flexWrap="wrap"
-        justifyContent="center"
-      >
-        {loading ? (
-          <Spinner />
-        ) : folders.length === 0 ? (
-          <Typography
-            variant="body2"
-            color="text.secondary"
-            align="center"
-            sx={{ width: "100%" }}
-          >
-            You have no folders yet. Create a folder to get started!
-          </Typography>
-        ) : (
-          <>
-            {folders.map((folder: Folder) => (
-              <Card
-                key={folder.id}
-                sx={{
-                  minWidth: 220,
-                  maxWidth: 260,
-                  bgcolor: "#e3f2fd",
-                  borderRadius: 2,
-                  boxShadow: 1,
-                  m: 1,
-                }}
-              >
-                <CardContent>
-                  <Box
-                    sx={{
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "space-between",
-                    }}
-                  >
-                    <Typography
-                      variant="h6"
-                      color="primary"
-                      sx={{ fontWeight: 600 }}
-                    >
+    <div className="min-h-screen bg-gradient-to-br from-blue-100 to-white flex items-center justify-center py-10">
+      <div className="max-w-4xl w-full bg-white rounded-2xl shadow-lg p-10 border border-blue-100 text-center z-10">
+        <h2 className="text-2xl font-bold text-blue-600 mb-6 text-center">
+          Your Folders
+        </h2>
+        <div className="flex flex-wrap gap-6 justify-center">
+          {loading ? (
+            <Spinner />
+          ) : folders.length === 0 ? (
+            <p className="w-full text-center text-gray-500">
+              You have no folders yet. Create a folder to get started!
+            </p>
+          ) : (
+            <>
+              {folders.map((folder: Folder) => (
+                <div
+                  key={folder.id}
+                  className="min-w-[220px] max-w-[260px] bg-blue-50 rounded-lg shadow p-4 m-1 flex flex-col justify-between"
+                >
+                  <div className="flex items-center justify-between mb-2">
+                    <div className="font-semibold text-lg text-blue-600">
                       {folder.name}
-                    </Typography>
-                    <Box>
-                      <IconButton
-                        size="small"
+                    </div>
+                    <div className="flex gap-2">
+                      <Button
+                        size="sm"
+                        variant="outline"
                         onClick={() => handleEditClick(folder)}
-                        aria-label="Edit folder"
+                        className="px-2 py-1"
                       >
-                        <EditIcon fontSize="small" />
-                      </IconButton>
-                      <IconButton
-                        size="small"
+                        ✏️
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="outline"
                         onClick={() => handleDeleteClick(folder.id)}
-                        aria-label="Delete folder"
+                        className="px-2 py-1"
                       >
-                        <DeleteIcon fontSize="small" />
-                      </IconButton>
-                    </Box>
-                  </Box>
+                        🗑️
+                      </Button>
+                    </div>
+                  </div>
                   {folder.description && (
-                    <Typography
-                      variant="body2"
-                      color="text.secondary"
-                      mb={1}
-                      sx={{ minHeight: 40 }}
-                    >
+                    <div className="text-gray-700 text-sm mb-2 min-h-[40px]">
                       {folder.description}
-                    </Typography>
+                    </div>
                   )}
-
                   <Button
-                    variant="contained"
-                    color="primary"
-                    size="small"
-                    sx={{ mt: 1, mb: 1 }}
                     onClick={() => navigate(`/view/folder?id=${folder.id}`)}
+                    className="mt-2 mb-2"
                   >
                     View Words
                   </Button>
-                </CardContent>
-              </Card>
-            ))}
-
-            {/* Edit Folder Dialog */}
-            <Dialog
-              open={editDialogOpen}
-              onClose={() => setEditDialogOpen(false)}
-              maxWidth="xs"
-              fullWidth
-            >
-              <DialogTitle>Edit Folder</DialogTitle>
-              <DialogContent>
-                <TextField
-                  label="Folder Name"
-                  value={editName}
-                  onChange={(e) => setEditName(e.target.value)}
-                  fullWidth
-                  margin="normal"
-                />
-                <TextField
-                  label="Description"
-                  value={editDescription}
-                  onChange={(e) => setEditDescription(e.target.value)}
-                  fullWidth
-                  margin="normal"
-                />
-                {editError && (
-                  <Typography color="error">{editError}</Typography>
-                )}
-              </DialogContent>
-              <DialogActions>
-                <Button
-                  onClick={() => setEditDialogOpen(false)}
-                  disabled={editing}
-                >
-                  Cancel
-                </Button>
-                <Button
-                  onClick={handleEditSave}
-                  disabled={editing}
-                  variant="contained"
-                >
-                  {editing ? "Saving..." : "Save"}
-                </Button>
-              </DialogActions>
-            </Dialog>
-
-            {/* Delete Folder Dialog */}
-            <Dialog
-              open={deleteDialogOpen}
-              onClose={() => setDeleteDialogOpen(false)}
-              maxWidth="xs"
-              fullWidth
-            >
-              <DialogTitle>Delete Folder</DialogTitle>
-              <DialogContent>
-                <Typography>
-                  Are you sure you want to delete this folder? This action
-                  cannot be undone.
-                </Typography>
-                {deleteError && (
-                  <Typography color="error">{deleteError}</Typography>
-                )}
-              </DialogContent>
-              <DialogActions>
-                <Button
-                  onClick={() => setDeleteDialogOpen(false)}
-                  disabled={deleting}
-                >
-                  Cancel
-                </Button>
-                <Button
-                  onClick={handleDeleteConfirm}
-                  disabled={deleting}
-                  color="error"
-                  variant="contained"
-                >
-                  {deleting ? "Deleting..." : "Delete"}
-                </Button>
-              </DialogActions>
-            </Dialog>
-          </>
-        )}
-      </Stack>
-      <SnackbarMessage
-        open={snackbarOpen}
-        message={error || ""}
-        severity="error"
-        onClose={() => setSnackbarOpen(false)}
-      />
-      <SnackbarMessage
-        open={!!successMessage}
-        message={successMessage}
-        severity="success"
-        onClose={() => setSuccessMessage("")}
-      />
-    </Box>
+                </div>
+              ))}
+              {/* Edit Folder Modal */}
+              {editDialogOpen && (
+                <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
+                  <div className="bg-white rounded-lg shadow p-6 w-full max-w-xs">
+                    <h3 className="text-lg font-bold mb-2">Edit Folder</h3>
+                    <input
+                      type="text"
+                      placeholder="Folder Name"
+                      value={editName}
+                      onChange={(e) => setEditName(e.target.value)}
+                      className="mb-3 w-full border border-gray-300 rounded px-2 py-1"
+                    />
+                    <input
+                      type="text"
+                      placeholder="Description"
+                      value={editDescription}
+                      onChange={(e) => setEditDescription(e.target.value)}
+                      className="mb-3 w-full border border-gray-300 rounded px-2 py-1"
+                    />
+                    {editError && (
+                      <p className="text-red-500 mb-2">{editError}</p>
+                    )}
+                    <div className="flex gap-4 mt-2">
+                      <Button
+                        onClick={() => setEditDialogOpen(false)}
+                        disabled={editing}
+                        variant="outline"
+                        className="w-24"
+                      >
+                        Cancel
+                      </Button>
+                      <Button
+                        onClick={handleEditSave}
+                        disabled={editing}
+                        className="w-24"
+                      >
+                        {editing ? "Saving..." : "Save"}
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              )}
+              {/* Delete Folder Modal */}
+              {deleteDialogOpen && (
+                <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
+                  <div className="bg-white rounded-lg shadow p-6 w-full max-w-xs">
+                    <h3 className="text-lg font-bold mb-2">Delete Folder</h3>
+                    <p>
+                      Are you sure you want to delete this folder? This action
+                      cannot be undone.
+                    </p>
+                    {deleteError && (
+                      <p className="text-red-500 mb-2">{deleteError}</p>
+                    )}
+                    <div className="flex gap-4 mt-2">
+                      <Button
+                        onClick={() => setDeleteDialogOpen(false)}
+                        disabled={deleting}
+                        variant="outline"
+                        className="w-24"
+                      >
+                        Cancel
+                      </Button>
+                      <Button
+                        onClick={handleDeleteConfirm}
+                        disabled={deleting}
+                        className="w-24"
+                        variant="destructive"
+                      >
+                        {deleting ? "Deleting..." : "Delete"}
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </>
+          )}
+        </div>
+        <SnackbarMessage
+          open={snackbarOpen}
+          message={error || ""}
+          severity="error"
+          onClose={() => setSnackbarOpen(false)}
+        />
+        <SnackbarMessage
+          open={!!successMessage}
+          message={successMessage}
+          severity="success"
+          onClose={() => setSuccessMessage("")}
+        />
+      </div>
+    </div>
   );
 };
 

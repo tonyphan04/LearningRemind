@@ -1,9 +1,6 @@
 import React, { useState } from "react";
-import TextField from "@mui/material/TextField";
-import Button from "@mui/material/Button";
-import Box from "@mui/material/Box";
-import Stack from "@mui/material/Stack";
-import Typography from "@mui/material/Typography";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 
 interface AddWordFormProps {
   onSave: (word: string, description: string, example: string) => void;
@@ -18,7 +15,7 @@ const AddWordForm: React.FC<AddWordFormProps> = ({ onSave, onCancel }) => {
   const [descError, setDescError] = useState("");
   const [exampleError, setExampleError] = useState("");
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     let hasError = false;
     setWordError("");
@@ -44,55 +41,53 @@ const AddWordForm: React.FC<AddWordFormProps> = ({ onSave, onCancel }) => {
   };
 
   return (
-    <Box
-      component="form"
+    <form
       onSubmit={handleSubmit}
-      sx={{
-        p: 2,
-        bgcolor: "white",
-        borderRadius: 2,
-        boxShadow: 2,
-        minWidth: 320,
-      }}
+      className="bg-white rounded-lg shadow p-6 min-w-[320px]"
     >
-      <Typography variant="h6" color="primary" mb={2}>
-        Add Word
-      </Typography>
-      <Stack spacing={2}>
-        <TextField
-          label="Word"
-          value={word}
-          onChange={(e) => setWord(e.target.value)}
-          error={!!wordError}
-          helperText={wordError}
-          fullWidth
-        />
-        <TextField
-          label="Description"
-          value={description}
-          onChange={(e) => setDescription(e.target.value)}
-          error={!!descError}
-          helperText={descError}
-          fullWidth
-        />
-        <TextField
-          label="Example"
-          value={example}
-          onChange={(e) => setExample(e.target.value)}
-          error={!!exampleError}
-          helperText={exampleError}
-          fullWidth
-        />
-        <Stack direction="row" spacing={2} justifyContent="flex-end">
-          <Button variant="contained" color="primary" type="submit">
-            Save
-          </Button>
-          <Button variant="outlined" color="primary" onClick={onCancel}>
+      <h2 className="text-lg font-semibold text-blue-600 mb-4">Add Word</h2>
+      <div className="flex flex-col gap-4">
+        <div>
+          <Input
+            placeholder="Word"
+            value={word}
+            onChange={(e) => setWord(e.target.value)}
+            className={wordError ? "border-red-500" : ""}
+          />
+          {wordError && (
+            <p className="text-red-500 text-sm mt-1">{wordError}</p>
+          )}
+        </div>
+        <div>
+          <Input
+            placeholder="Description"
+            value={description}
+            onChange={(e) => setDescription(e.target.value)}
+            className={descError ? "border-red-500" : ""}
+          />
+          {descError && (
+            <p className="text-red-500 text-sm mt-1">{descError}</p>
+          )}
+        </div>
+        <div>
+          <Input
+            placeholder="Example"
+            value={example}
+            onChange={(e) => setExample(e.target.value)}
+            className={exampleError ? "border-red-500" : ""}
+          />
+          {exampleError && (
+            <p className="text-red-500 text-sm mt-1">{exampleError}</p>
+          )}
+        </div>
+        <div className="flex gap-2">
+          <Button type="submit">Save</Button>
+          <Button type="button" variant="outline" onClick={onCancel}>
             Cancel
           </Button>
-        </Stack>
-      </Stack>
-    </Box>
+        </div>
+      </div>
+    </form>
   );
 };
 

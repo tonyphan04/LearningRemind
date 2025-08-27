@@ -1,17 +1,9 @@
-// Simple Material UI loading spinner
 import React from "react";
-import CircularProgress from "@mui/material/CircularProgress";
-import Box from "@mui/material/Box";
 
 const Spinner: React.FC = () => (
-  <Box
-    display="flex"
-    justifyContent="center"
-    alignItems="center"
-    minHeight={120}
-  >
-    <CircularProgress color="primary" />
-  </Box>
+  <div className="flex justify-center items-center min-h-[120px]">
+    <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-blue-500"></div>
+  </div>
 );
 
 export default Spinner;

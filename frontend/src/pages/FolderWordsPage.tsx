@@ -1,24 +1,15 @@
 import React, { useState } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
-import Box from "@mui/material/Box";
-import Typography from "@mui/material/Typography";
-import Card from "@mui/material/Card";
-import CardContent from "@mui/material/CardContent";
-import Button from "@mui/material/Button";
-import Dialog from "@mui/material/Dialog";
-import DialogTitle from "@mui/material/DialogTitle";
-import DialogContent from "@mui/material/DialogContent";
-import AddWordForm from "../components/AddWordForm";
-import { useFolder, useWords } from "../hooks/useFolderWords";
-
-const FolderWordsPage: React.FC = () => {
+import { Button } from "@/components/ui/button";
+import AddWordForm from "@/components/AddWordForm";
+import { useFolders } from "@/hooks/useFolders";
+import { useWords } from "@/hooks/useFolderWords";
+const FolderWordsPage = () => {
   const [searchParams] = useSearchParams();
   const folderId = searchParams.get("id");
-  const {
-    folderName,
-    loading: folderLoading,
-    error: folderError,
-  } = useFolder(folderId);
+  const { folders, loading: folderLoading, error: folderError } = useFolders();
+  const folder = folders?.find((f) => String(f.id) === folderId);
+  const folderName = folder?.name;
   const {
     words,
     loading: wordsLoading,
@@ -44,105 +35,78 @@ const FolderWordsPage: React.FC = () => {
   };
 
   return (
-    <Box
-      sx={{
-        maxWidth: 700,
-        mx: "auto",
-        mt: 6,
-        bgcolor: "white",
-        borderRadius: 2,
-        boxShadow: 3,
-        p: 4,
-      }}
-    >
-      <Box sx={{ display: "flex", alignItems: "center", mb: 3 }}>
-        <Button
-          variant="outlined"
-          color="primary"
-          sx={{ mr: 2 }}
-          onClick={() => navigate("/view")}
-        >
-          Back
-        </Button>
-        <Typography
-          variant="h4"
-          color="primary"
-          align="center"
-          fontWeight={600}
-          sx={{ flex: 1 }}
-        >
-          Words in {folderName}
-        </Typography>
-      </Box>
-      {(folderLoading || wordsLoading) && (
-        <Typography align="center" color="text.secondary" mb={2}>
-          Loading...
-        </Typography>
-      )}
-      <Button
-        variant="contained"
-        color="primary"
-        sx={{ mb: 3 }}
-        onClick={() => setShowAddWordModal(true)}
-      >
-        Add Word
-      </Button>
-      <Dialog
-        open={showAddWordModal}
-        onClose={() => setShowAddWordModal(false)}
-        maxWidth="xs"
-        fullWidth
-      >
-        <DialogTitle>Add Word to {folderName}</DialogTitle>
-        <DialogContent>
-          <AddWordForm
-            onSave={handleAddWord}
-            onCancel={() => setShowAddWordModal(false)}
-          />
-        </DialogContent>
-      </Dialog>
-      {/* Removed word dialog, now handled by navigation to WordDetailPage */}
-      <Box sx={{ mt: 2 }}>
-        {words.length === 0 && !wordsLoading && (
-          <Typography variant="body2" color="text.secondary">
-            No words in this folder.
-          </Typography>
-        )}
-        {words.map((w) => (
-          <Card
-            key={w.id}
-            sx={{
-              bgcolor: "#f5faff",
-              borderRadius: 1,
-              boxShadow: 0,
-              cursor: "pointer",
-              mb: 2,
-            }}
-            onClick={() => navigate(`/view/folder/${folderId}/vocab/${w.id}`)}
+    <div className="min-h-screen bg-gradient-to-br from-blue-100 to-white flex items-center justify-center py-10">
+      <div className="max-w-2xl w-full bg-white rounded-2xl shadow-xl p-8 border border-blue-200">
+        <div className="flex items-center mb-6">
+          <Button
+            variant="outline"
+            onClick={() => navigate(-1)}
+            className="mr-2 border-blue-500 text-blue-600 hover:bg-blue-50"
           >
-            <CardContent>
-              <Typography variant="subtitle1" fontWeight={600}>
-                {w.word}
-              </Typography>
-              <Typography variant="body2" color="text.secondary">
-                {w.description}
-              </Typography>
-              <Typography
-                variant="body2"
-                sx={{ fontStyle: "italic", color: "primary.main" }}
-              >
-                Ex: {w.example}
-              </Typography>
-            </CardContent>
-          </Card>
-        ))}
-      </Box>
-      {(message || folderError || wordsError) && (
-        <Typography color="error" align="center" mt={2}>
-          {message || folderError || wordsError}
-        </Typography>
-      )}
-    </Box>
+            Back
+          </Button>
+          <h2 className="text-2xl font-extrabold text-blue-700 tracking-tight">
+            {folderName || "Folder"}
+          </h2>
+        </div>
+        {(folderLoading || wordsLoading) && (
+          <p className="text-center text-blue-400 mb-4">Loading...</p>
+        )}
+        <Button
+          onClick={() => setShowAddWordModal(true)}
+          className="mb-6 bg-blue-600 text-white hover:bg-blue-700 w-full py-3 rounded-lg font-semibold"
+        >
+          Add Word
+        </Button>
+        {showAddWordModal && (
+          <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
+            <div className="bg-white rounded-2xl shadow-xl p-8 w-full max-w-md border border-blue-200">
+              <h3 className="text-xl font-bold text-blue-700 mb-4">Add Word</h3>
+              <AddWordForm
+                onSave={handleAddWord}
+                onCancel={() => setShowAddWordModal(false)}
+              />
+              {message && <p className="text-red-500 mt-4">{message}</p>}
+            </div>
+          </div>
+        )}
+        <div className="mt-8">
+          {wordsLoading ? (
+            <p className="text-blue-400">Loading words...</p>
+          ) : words.length === 0 ? (
+            <p className="text-blue-500">No words found in this folder.</p>
+          ) : (
+            <div className="flex flex-col gap-4">
+              {words.map((word, idx) => (
+                <div
+                  key={idx}
+                  className="bg-blue-50 border border-blue-200 rounded-xl p-5"
+                >
+                  <div className="font-bold text-lg text-blue-700 mb-1">
+                    {word.word}
+                  </div>
+                  {word.description && (
+                    <div className="text-gray-700 text-sm mb-1">
+                      {word.description}
+                    </div>
+                  )}
+                  {word.example && (
+                    <div className="italic text-blue-500 text-sm">
+                      Ex: {word.example}
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+        {(message || folderError || wordsError) && (
+          <p className="text-red-500 text-center mt-6">
+            {message || folderError || wordsError}
+          </p>
+        )}
+      </div>
+    </div>
   );
 };
 

@@ -1,51 +1,34 @@
 import React from "react";
-import Box from "@mui/material/Box";
-import Typography from "@mui/material/Typography";
-import Button from "@mui/material/Button";
-import Stack from "@mui/material/Stack";
 import { Link } from "react-router-dom";
+import { Button } from "@/components/ui/button";
 
 const HomePage: React.FC = () => {
   return (
-    <Box
-      sx={{
-        maxWidth: 600,
-        mx: "auto",
-        mt: 8,
-        bgcolor: "white",
-        borderRadius: 2,
-        boxShadow: 3,
-        p: 5,
-        textAlign: "center",
-      }}
-    >
-      <Typography variant="h3" color="primary" mb={2} fontWeight={700}>
-        Welcome to Learning Remind
-      </Typography>
-      <Typography variant="h6" color="text.secondary" mb={4}>
-        Your personal learning and review assistant
-      </Typography>
-      <Stack direction="row" spacing={2} justifyContent="center">
-        <Button
-          variant="contained"
-          color="primary"
-          size="large"
-          component={Link}
-          to="/create"
-        >
-          Create Vocab List
-        </Button>
-        <Button
-          variant="outlined"
-          color="primary"
-          size="large"
-          component={Link}
-          to="/view"
-        >
-          View My Folders
-        </Button>
-      </Stack>
-    </Box>
+    <div className="min-h-screen bg-gradient-to-br from-blue-100 to-white flex items-center justify-center py-10">
+      <div className="max-w-xl w-full bg-white rounded-2xl shadow-lg p-10 border border-blue-100 text-center z-10">
+        <h1 className="text-4xl font-extrabold text-blue-700 mb-4 tracking-tight drop-shadow-lg font-sans">
+          Welcome to Learning Remind
+        </h1>
+        <h2 className="text-xl text-gray-600 mb-8 font-medium">
+          Your personal learning and review assistant
+        </h2>
+        <div className="flex flex-col sm:flex-row gap-4 justify-center">
+          <Button
+            asChild
+            className="px-8 py-4 text-lg font-bold shadow-md bg-blue-600 text-white hover:bg-blue-700 rounded-xl transition-all"
+          >
+            <Link to="/create">Create Vocab List</Link>
+          </Button>
+          <Button
+            asChild
+            variant="outline"
+            className="px-8 py-4 text-lg font-bold shadow-md border-blue-600 text-blue-600 hover:bg-blue-50 rounded-xl transition-all"
+          >
+            <Link to="/view">View My Folders</Link>
+          </Button>
+        </div>
+      </div>
+    </div>
   );
 };
 
