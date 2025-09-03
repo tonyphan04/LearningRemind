@@ -1,18 +1,60 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Link } from "react-router-dom";
-import { useSignup } from "../hooks/useAuth";
+import { Link, useNavigate } from "react-router-dom";
 
 const SignupForm = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const { signup, error, setError, success, loading } = useSignup();
+  const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
+  const [loading, setLoading] = useState(false);
+  const navigate = useNavigate();
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setError("");
-    await signup(email, password);
+    setSuccess("");
+    setLoading(true);
+
+    try {
+      const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "";
+      const res = await fetch(`${API_BASE_URL}/api/auth/signup`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ username: email, password }),
+      });
+
+      let data;
+      try {
+        data = await res.json();
+      } catch {
+        const text = await res.text();
+        setError(text || "Signup failed");
+        setLoading(false);
+        return;
+      }
+
+      if (res.ok) {
+        setSuccess("Signup successful! You can now log in.");
+        setTimeout(() => navigate("/login"), 1200);
+      } else if (data && data.error) {
+        if (typeof data.error === "string") {
+          setError(data.error);
+        } else if (typeof data.error === "object" && data.error !== null) {
+          const messages = Object.values(data.error).flat().filter(Boolean);
+          setError(messages.join(". "));
+        } else {
+          setError("Signup failed");
+        }
+      } else {
+        setError("Signup failed");
+      }
+    } catch (err) {
+      setError("Network error: " + err);
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (

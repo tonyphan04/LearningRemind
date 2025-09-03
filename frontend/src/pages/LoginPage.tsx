@@ -1,18 +1,17 @@
 import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Link } from "react-router-dom";
-import { useLogin } from "../hooks/useAuth";
+import { Link, useNavigate } from "react-router-dom";
+import { useAuth } from "../hooks/useAuthContext";
 
-interface LoginPageProps {
-  onLoginSuccess: () => void;
-}
-
-const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
+const LoginPage: React.FC = () => {
   const [account, setAccount] = useState("");
   const [password, setPassword] = useState("");
   const [remember, setRemember] = useState(false);
-  const { login, error, setError, loading } = useLogin(onLoginSuccess);
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
+  const { login } = useAuth();
+  const navigate = useNavigate();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -21,7 +20,49 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
       setError("Please enter account and password.");
       return;
     }
-    await login(account, password);
+
+    setLoading(true);
+    try {
+      const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "";
+      const res = await fetch(`${API_BASE_URL}/api/auth/login`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ username: account, password }),
+      });
+
+      if (res.ok) {
+        const { token } = await res.json();
+        login(token); // Use AuthContext's login function
+        navigate("/"); // Navigate to home page
+      } else {
+        let data;
+        try {
+          data = await res.json();
+        } catch {
+          const text = await res.text();
+          setError(text || "Login failed. Please check your credentials.");
+          return;
+        }
+        if (data && data.error) {
+          if (typeof data.error === "string") {
+            setError(data.error);
+          } else if (typeof data.error === "object" && data.error !== null) {
+            const messages = Object.values(data.error).flat().filter(Boolean);
+            setError(messages.join(". "));
+          } else {
+            setError("Login failed. Please check your credentials.");
+          }
+        } else if (res.status === 404) {
+          setError("Account does not exist. Please sign up.");
+        } else {
+          setError("Login failed. Please check your credentials.");
+        }
+      }
+    } catch (err) {
+      setError("Network error: " + err);
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (

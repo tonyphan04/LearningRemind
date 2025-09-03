@@ -1,4 +1,3 @@
-import React, { useState } from "react";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import HomePage from "./pages/HomePage";
 import CreatePage from "./pages/CreatePage";
@@ -8,22 +7,29 @@ import WordDetailPage from "./pages/WordDetailPage";
 import Navigation from "./components/Navigation";
 import LoginPage from "./pages/LoginPage";
 import SignupForm from "./pages/SignupForm";
+import { AuthProvider } from "./contexts/AuthContext";
+import { useAuth } from "./hooks/useAuthContext";
 import "./App.css";
 
-function App() {
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
+// Separate component for routes that need auth state
+function AppRoutes() {
+  const { isAuthenticated, loading } = useAuth();
+
+  // Show loading indicator while checking authentication
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-screen">
+        <div className="w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
+      </div>
+    );
+  }
 
   return (
-    <Router>
+    <>
       {!isAuthenticated ? (
         <Routes>
           <Route path="/signup" element={<SignupForm />} />
-          <Route
-            path="*"
-            element={
-              <LoginPage onLoginSuccess={() => setIsAuthenticated(true)} />
-            }
-          />
+          <Route path="*" element={<LoginPage />} />
         </Routes>
       ) : (
         <>
@@ -40,7 +46,18 @@ function App() {
           </Routes>
         </>
       )}
-    </Router>
+    </>
+  );
+}
+
+// Main App component wraps everything with providers
+function App() {
+  return (
+    <AuthProvider>
+      <Router>
+        <AppRoutes />
+      </Router>
+    </AuthProvider>
   );
 }
 

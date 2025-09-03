@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { apiFetch } from "../api";
 
 export interface Word {
@@ -16,8 +16,9 @@ export function useFolder(folderId?: string | null) {
   useEffect(() => {
     if (!folderId) return;
     setLoading(true);
-    apiFetch(`/api/folders/${folderId}`)
-      .then((data) => setFolderName(data.name))
+    // Use caching for folder data to avoid repeated requests
+    apiFetch(`/api/folders/${folderId}`, {}, true, true)
+      .then((data: { name: string }) => setFolderName(data.name))
       .catch((e) => setError(e.message))
       .finally(() => setLoading(false));
   }, [folderId]);
@@ -30,18 +31,15 @@ export function useWords(folderId?: string | null) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const fetchWords = useCallback(() => {
+  useEffect(() => {
     if (!folderId) return;
     setLoading(true);
-    apiFetch(`/api/vocabs?collectionId=${folderId}`)
-      .then((data) => setWords(data))
+    // Use caching for vocabulary list to avoid repeated requests
+    apiFetch(`/api/vocabs?collectionId=${folderId}`, {}, true, true)
+      .then((data: Word[]) => setWords(data))
       .catch((e) => setError(e.message))
       .finally(() => setLoading(false));
   }, [folderId]);
-
-  useEffect(() => {
-    fetchWords();
-  }, [fetchWords]);
 
   const addWord = async (word: string, description: string, example: string) => {
     if (!folderId) return;
@@ -68,5 +66,16 @@ export function useWords(folderId?: string | null) {
     }
   };
 
-  return { words, loading, error, fetchWords, addWord };
+  // Add a manual refetch function for when we need to refresh data
+  const fetchWords = () => {
+    if (!folderId) return;
+    setLoading(true);
+    // Skip cache for manual refresh to ensure fresh data
+    apiFetch(`/api/vocabs?collectionId=${folderId}`, {}, true, false)
+      .then((data: Word[]) => setWords(data))
+      .catch((e) => setError(e.message))
+      .finally(() => setLoading(false));
+  };
+
+  return { words, loading, error, addWord, fetchWords };
 }
