@@ -1,39 +1,39 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { useDeleteFolder, useEditFolder } from "../hooks/useFolderActions";
 import { useNavigate } from "react-router-dom";
 import { useFolders } from "../hooks/useFolders";
 import type { Folder } from "../types/common";
-import Spinner from "../components/Spinner";
-import SnackbarMessage from "../components/SnackbarMessage";
+import LoadingSpinner from "../components/LoadingSpinner";
+import ErrorBoundary from "../components/ErrorBoundary";
+import { useToast } from "../hooks/useToast";
 
-const ViewPage: React.FC = () => {
+const ViewPage = () => {
   const { folders, loading, error, refetch } = useFolders();
   const {
     deleteFolder,
     loading: deleting,
     error: deleteError,
-    setError: setDeleteError,
   } = useDeleteFolder();
   const {
     editFolder,
     loading: editing,
     error: editError,
-    setError: setEditError,
   } = useEditFolder();
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [editFolderId, setEditFolderId] = useState<string | null>(null);
   const [editName, setEditName] = useState("");
   const [editDescription, setEditDescription] = useState("");
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-  const [successMessage, setSuccessMessage] = useState("");
   const [deleteFolderId, setDeleteFolderId] = useState<string | null>(null);
+  const { showToast } = useToast();
+  const navigate = useNavigate();
+
   const handleEditClick = (folder: Folder) => {
     setEditFolderId(String(folder.id));
     setEditName(folder.name);
     setEditDescription(folder.description || "");
     setEditDialogOpen(true);
-    setEditError("");
   };
 
   const handleEditSave = async () => {
@@ -44,15 +44,16 @@ const ViewPage: React.FC = () => {
     });
     if (success) {
       setEditDialogOpen(false);
-      setSuccessMessage("Folder updated successfully.");
+      showToast("Folder updated successfully", "success");
       refetch();
+    } else if (editError) {
+      showToast(editError, "error");
     }
   };
 
-  const handleDeleteClick = (folderId: number | string) => {
-    setDeleteFolderId(String(folderId));
+  const handleDeleteClick = (folderId: string) => {
+    setDeleteFolderId(folderId);
     setDeleteDialogOpen(true);
-    setDeleteError("");
   };
 
   const handleDeleteConfirm = async () => {
@@ -60,172 +61,168 @@ const ViewPage: React.FC = () => {
     const success = await deleteFolder(deleteFolderId);
     if (success) {
       setDeleteDialogOpen(false);
-      setSuccessMessage("Folder deleted successfully.");
+      showToast("Folder deleted successfully", "success");
       refetch();
+    } else if (deleteError) {
+      showToast(deleteError, "error");
     }
   };
-  const navigate = useNavigate();
-  const [snackbarOpen, setSnackbarOpen] = React.useState(false);
 
-  React.useEffect(() => {
-    if (error) setSnackbarOpen(true);
-  }, [error]);
+  const handleFolderClick = (folderId: string) => {
+    navigate(`/view/folder?id=${folderId}`);
+  };
 
-  React.useEffect(() => {
-    if (successMessage) {
-      const timer = setTimeout(() => setSuccessMessage(""), 2000);
-      return () => clearTimeout(timer);
-    }
-  }, [successMessage]);
+  if (loading) {
+    return <LoadingSpinner size="lg" text="Loading folders..." />;
+  }
+
+  if (error) {
+    return (
+      <div className="p-4 bg-red-50 text-red-700 rounded-lg shadow-md">
+        {error}
+      </div>
+    );
+  }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-100 to-white flex items-center justify-center py-10">
-      <div className="max-w-4xl w-full bg-white rounded-2xl shadow-lg p-10 border border-blue-100 text-center z-10">
-        <h2 className="text-2xl font-bold text-blue-600 mb-6 text-center">
-          Your Folders
-        </h2>
-        <div className="flex flex-wrap gap-6 justify-center">
-          {loading ? (
-            <Spinner />
-          ) : folders.length === 0 ? (
-            <p className="w-full text-center text-gray-500">
-              You have no folders yet. Create a folder to get started!
-            </p>
-          ) : (
-            <>
-              {folders.map((folder: Folder) => (
-                <div
-                  key={folder.id}
-                  className="min-w-[220px] max-w-[260px] bg-blue-50 rounded-lg shadow p-4 m-1 flex flex-col justify-between"
-                >
-                  <div className="flex items-center justify-between mb-2">
-                    <div className="font-semibold text-lg text-blue-600">
-                      {folder.name}
-                    </div>
-                    <div className="flex gap-2">
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() => handleEditClick(folder)}
-                        className="px-2 py-1"
-                      >
-                        ✏️
-                      </Button>
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() => handleDeleteClick(folder.id)}
-                        className="px-2 py-1"
-                      >
-                        🗑️
-                      </Button>
-                    </div>
-                  </div>
-                  {folder.description && (
-                    <div className="text-gray-700 text-sm mb-2 min-h-[40px]">
-                      {folder.description}
-                    </div>
-                  )}
-                  <Button
-                    onClick={() => navigate(`/view/folder?id=${folder.id}`)}
-                    className="mt-2 mb-2"
+    <ErrorBoundary>
+      <div className="min-h-screen bg-gradient-to-br from-blue-100 to-white py-10">
+        <div className="max-w-4xl mx-auto px-4">
+          <div className="bg-white rounded-2xl shadow-lg p-8 border border-blue-100">
+            <h2 className="text-2xl font-extrabold text-blue-700 mb-6 tracking-tight">
+              My Folders
+            </h2>
+
+            <div className="mb-6">
+              <Button
+                onClick={() => navigate("/create")}
+                className="bg-blue-600 hover:bg-blue-700 text-white"
+              >
+                Create New Folder
+              </Button>
+            </div>
+
+            {folders && folders.length > 0 ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {folders.map((folder) => (
+                  <div
+                    key={folder.id}
+                    className="bg-blue-50 border border-blue-200 rounded-xl p-6 transition-shadow hover:shadow-md"
                   >
-                    View Words
-                  </Button>
-                </div>
-              ))}
-              {/* Edit Folder Modal */}
-              {editDialogOpen && (
-                <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
-                  <div className="bg-white rounded-lg shadow p-6 w-full max-w-xs">
-                    <h3 className="text-lg font-bold mb-2">Edit Folder</h3>
-                    <input
-                      type="text"
-                      placeholder="Folder Name"
-                      value={editName}
-                      onChange={(e) => setEditName(e.target.value)}
-                      className="mb-3 w-full border border-gray-300 rounded px-2 py-1"
-                    />
-                    <input
-                      type="text"
-                      placeholder="Description"
-                      value={editDescription}
-                      onChange={(e) => setEditDescription(e.target.value)}
-                      className="mb-3 w-full border border-gray-300 rounded px-2 py-1"
-                    />
-                    {editError && (
-                      <p className="text-red-500 mb-2">{editError}</p>
+                    <h3
+                      onClick={() => handleFolderClick(String(folder.id))}
+                      className="text-xl font-bold text-blue-700 mb-2 cursor-pointer hover:text-blue-800"
+                    >
+                      {folder.name}
+                    </h3>
+                    {folder.description && (
+                      <p className="text-gray-700 mb-4">{folder.description}</p>
                     )}
-                    <div className="flex gap-4 mt-2">
+                    <div className="flex space-x-2 mt-4">
                       <Button
-                        onClick={() => setEditDialogOpen(false)}
-                        disabled={editing}
+                        onClick={() => handleEditClick(folder)}
                         variant="outline"
-                        className="w-24"
+                        size="sm"
+                        className="border-blue-500 text-blue-600 hover:bg-blue-50"
                       >
-                        Cancel
+                        Edit
                       </Button>
                       <Button
-                        onClick={handleEditSave}
-                        disabled={editing}
-                        className="w-24"
-                      >
-                        {editing ? "Saving..." : "Save"}
-                      </Button>
-                    </div>
-                  </div>
-                </div>
-              )}
-              {/* Delete Folder Modal */}
-              {deleteDialogOpen && (
-                <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
-                  <div className="bg-white rounded-lg shadow p-6 w-full max-w-xs">
-                    <h3 className="text-lg font-bold mb-2">Delete Folder</h3>
-                    <p>
-                      Are you sure you want to delete this folder? This action
-                      cannot be undone.
-                    </p>
-                    {deleteError && (
-                      <p className="text-red-500 mb-2">{deleteError}</p>
-                    )}
-                    <div className="flex gap-4 mt-2">
-                      <Button
-                        onClick={() => setDeleteDialogOpen(false)}
-                        disabled={deleting}
-                        variant="outline"
-                        className="w-24"
-                      >
-                        Cancel
-                      </Button>
-                      <Button
-                        onClick={handleDeleteConfirm}
-                        disabled={deleting}
-                        className="w-24"
+                        onClick={() => handleDeleteClick(String(folder.id))}
                         variant="destructive"
+                        size="sm"
+                        className="bg-red-500 hover:bg-red-600 text-white"
                       >
-                        {deleting ? "Deleting..." : "Delete"}
+                        Delete
                       </Button>
                     </div>
                   </div>
-                </div>
-              )}
-            </>
-          )}
+                ))}
+              </div>
+            ) : (
+              <p className="text-gray-500 text-center py-10">
+                No folders found. Create your first folder to get started!
+              </p>
+            )}
+          </div>
         </div>
-        <SnackbarMessage
-          open={snackbarOpen}
-          message={error || ""}
-          severity="error"
-          onClose={() => setSnackbarOpen(false)}
-        />
-        <SnackbarMessage
-          open={!!successMessage}
-          message={successMessage}
-          severity="success"
-          onClose={() => setSuccessMessage("")}
-        />
+
+        {/* Edit Dialog */}
+        {editDialogOpen && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+            <div className="bg-white rounded-lg p-6 max-w-md w-full shadow-2xl">
+              <h3 className="text-xl font-bold mb-4">Edit Folder</h3>
+              <input
+                type="text"
+                value={editName}
+                onChange={(e) => setEditName(e.target.value)}
+                className="w-full border border-gray-300 rounded p-2 mb-3"
+                placeholder="Folder Name"
+              />
+              <input
+                type="text"
+                value={editDescription}
+                onChange={(e) => setEditDescription(e.target.value)}
+                className="w-full border border-gray-300 rounded p-2 mb-4"
+                placeholder="Description (optional)"
+              />
+              <div className="flex justify-end space-x-2">
+                <Button
+                  onClick={() => setEditDialogOpen(false)}
+                  variant="outline"
+                  className="border-gray-300"
+                >
+                  Cancel
+                </Button>
+                <Button 
+                  onClick={handleEditSave} 
+                  disabled={editing}
+                  className="bg-blue-600 hover:bg-blue-700 text-white"
+                >
+                  {editing ? <LoadingSpinner size="sm" /> : "Save"}
+                </Button>
+              </div>
+              {editError && (
+                <p className="text-red-500 text-sm mt-2">{editError}</p>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* Delete Confirmation Dialog */}
+        {deleteDialogOpen && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+            <div className="bg-white rounded-lg p-6 max-w-md w-full shadow-2xl">
+              <h3 className="text-xl font-bold mb-4">Delete Folder</h3>
+              <p className="mb-6">
+                Are you sure you want to delete this folder? This action cannot be
+                undone.
+              </p>
+              <div className="flex justify-end space-x-2">
+                <Button
+                  onClick={() => setDeleteDialogOpen(false)}
+                  variant="outline"
+                  className="border-gray-300"
+                >
+                  Cancel
+                </Button>
+                <Button
+                  onClick={handleDeleteConfirm}
+                  variant="destructive"
+                  disabled={deleting}
+                  className="bg-red-600 hover:bg-red-700 text-white"
+                >
+                  {deleting ? <LoadingSpinner size="sm" /> : "Delete"}
+                </Button>
+              </div>
+              {deleteError && (
+                <p className="text-red-500 text-sm mt-2">{deleteError}</p>
+              )}
+            </div>
+          </div>
+        )}
       </div>
-    </div>
+    </ErrorBoundary>
   );
 };
 

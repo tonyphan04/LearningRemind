@@ -3,6 +3,9 @@ import Navigation from "./components/Navigation";
 import { AuthProvider } from "./contexts/AuthContext";
 import { useAuth } from "./hooks/useAuthContext";
 import { publicRoutes, privateRoutes } from "./routes";
+import { ToastProvider } from "./components/Toast";
+import ErrorBoundary from "./components/ErrorBoundary";
+import LoadingSpinner from "./components/LoadingSpinner";
 import "./App.css";
 
 // Separate component for routes that need auth state
@@ -12,9 +15,7 @@ function AppRoutes() {
   // Show loading indicator while checking authentication
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-screen">
-        <div className="w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
-      </div>
+      <LoadingSpinner size="lg" fullScreen text="Loading application..." />
     );
   }
 
@@ -47,11 +48,15 @@ function AppRoutes() {
 // Main App component wraps everything with providers
 function App() {
   return (
-    <AuthProvider>
-      <Router>
-        <AppRoutes />
-      </Router>
-    </AuthProvider>
+    <ErrorBoundary>
+      <ToastProvider>
+        <AuthProvider>
+          <Router>
+            <AppRoutes />
+          </Router>
+        </AuthProvider>
+      </ToastProvider>
+    </ErrorBoundary>
   );
 }
 
