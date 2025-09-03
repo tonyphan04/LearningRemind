@@ -2,6 +2,7 @@ import { Request, Response } from "express";
 import { prisma } from "../services/prisma";
 import jwt from "jsonwebtoken";
 import { createFolderSchema, updateFolderSchema } from "../validation/folder.validation";
+import { createInitialReviewTask } from "../services/spacedRepetition";
 
 // Helper to get userId from JWT
 function getUserIdFromRequest(req: Request): number | null {
@@ -25,9 +26,14 @@ export const createFolder = async (req: Request, res: Response) => {
   }
   const { name, description } = parseResult.data;
   try {
+    // Create the folder (collection)
     const folder = await prisma.collection.create({
       data: { name, description, userId },
     });
+    
+    // Automatically create a review task for this new folder
+    await createInitialReviewTask(folder.id);
+    
     return res.status(201).json(folder);
   } catch (err: any) {
     return res.status(500).json({ error: err.message });

@@ -1,6 +1,6 @@
 import { Request, Response } from 'express';
-import { getTodayReviewTasks } from '../../src/services/reviewTasks';
-import { sendReviewEmail } from '../../src/services/email';
+import { getAllDueCollections } from '../../src/services/spacedRepetition';
+import { sendDailyReviewEmail } from '../../src/services/reviewEmail';
 
 export default async function handler(req: Request, res: Response) {
   // Only allow GET requests
@@ -15,14 +15,22 @@ export default async function handler(req: Request, res: Response) {
       return res.status(401).json({ error: 'Unauthorized' });
     }
 
-    const todayTasks = await getTodayReviewTasks();
-    await sendReviewEmail(todayTasks);
+    // Get all collections due for review today
+    const allDueCollections = await getAllDueCollections();
+    
+    // Filter out collections without review tasks
+    const dueCollections = allDueCollections.filter(
+      collection => collection.reviewTask !== null
+    ) as any; // Type assertion to resolve typing issue
+    
+    // Send emails to users with collections due for review
+    await sendDailyReviewEmail(dueCollections);
     
     return res.status(200).json({ 
       success: true, 
       sent: true, 
-      count: todayTasks.length,
-      message: 'Review email sent successfully' 
+      count: dueCollections.length,
+      message: 'Review emails sent successfully' 
     });
   } catch (error: any) {
     console.error('Cron job error:', error);

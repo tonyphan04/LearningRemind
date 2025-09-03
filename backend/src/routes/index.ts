@@ -555,4 +555,58 @@ router.delete("/vocabs/:id", vocab.deleteVocab);
  */
 router.get("/review/today", review.getTodayReview);
 
+/**
+ * @swagger
+ * /api/review/complete/{taskId}:
+ *   post:
+ *     summary: Mark a review task as completed and schedule the next review
+ *     tags: [Review]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: taskId
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: The ID of the review task
+ *     responses:
+ *       200:
+ *         description: Review task updated
+ *       401:
+ *         description: Unauthorized
+ *       403:
+ *         description: Forbidden
+ *       404:
+ *         description: Task not found
+ */
+router.post("/review/complete/:taskId", review.markReviewCompleted);
+
+/**
+ * @swagger
+ * /api/review/reset/{taskId}:
+ *   post:
+ *     summary: Reset a review task to start the spaced repetition sequence from the beginning
+ *     tags: [Review]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: taskId
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: The ID of the review task
+ *     responses:
+ *       200:
+ *         description: Review task reset
+ *       401:
+ *         description: Unauthorized
+ *       403:
+ *         description: Forbidden
+ *       404:
+ *         description: Task not found
+ */
+router.post("/review/reset/:taskId", review.resetReviewTask);
+
 export default router;
